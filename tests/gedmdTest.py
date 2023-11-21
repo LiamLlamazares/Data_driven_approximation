@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env 4python3
 # -*- coding: utf-8 -*-
 import numpy as np
 import numpy.polynomial
