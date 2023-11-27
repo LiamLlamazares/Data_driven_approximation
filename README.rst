@@ -38,3 +38,6 @@ The ODE/SDE solvers required by some examples to generate trajectory data are im
     Linux: g++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` systems.cpp -o ../d3s/systems`python3-config --extension-suffix`
     MAC:   c++ -arch x86_64 -O3 -Wall -shared -std=c++11 -undefined dynamic_lookup `python3 -m pybind11 --includes` systems.cpp -o ../d3s/systems`python3-config --extension-suffix`
 
+In Windows, first download Build Tools for Visual Studio. Then use the native Visual Studio command prompt to compile the code by executing the following command::    
+    Windows: cl /EHsc /O2 /LD systems.cpp /I<path_to_pybind11_include> /I<path_to_python_include> /link /out:../d3s/systems.pyd
+
