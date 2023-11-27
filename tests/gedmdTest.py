@@ -1,10 +1,18 @@
+import sysconfig
+import pybind11
+
+# python_include_path = sysconfig.get_paths()["include"]
+# pybind11_include_path = pybind11.get_include()
+# print(f"Python include path: {python_include_path}")
+# print(f"pybind11 include path: {pybind11_include_path}")
 #!/usr/bin/env 4python3
 # -*- coding: utf-8 -*-
 import numpy as np
 import numpy.polynomial
 import scipy as sp
 import matplotlib.pyplot as plt
-
+import sys
+sys.path.insert(0, 'C:/Users/liaml/Documentos/gEDMD_code') # add path to gEDMD package, should be changed to your local path
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
