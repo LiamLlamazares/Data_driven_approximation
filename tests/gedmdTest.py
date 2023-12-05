@@ -1,5 +1,12 @@
 import sysconfig
 import pybind11
+python_include_path = sysconfig.get_paths()["include"]
+pybind11_include_path = pybind11.get_include()
+
+print(f"Python include path: {python_include_path}")
+print(f"pybind11 include path: {pybind11_include_path}")
+
+
 
 # python_include_path = sysconfig.get_paths()["include"]
 # pybind11_include_path = pybind11.get_include()
@@ -12,11 +19,11 @@ import numpy.polynomial
 import scipy as sp
 import matplotlib.pyplot as plt
 import sys
-sys.path.insert(0, 'C:/Users/liaml/Documentos/gEDMD_code') # add path to gEDMD package, should be changed to your local path
+sys.path.insert(0, 'C:/Users/illam/Documents/GitHub/gEDMD_code') # add path to gEDMD package, should be changed to your local path
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
-import d3s.systems as systems
+#import d3s.systems as systems
 
 from d3s.tools import printVector, printMatrix
 
@@ -40,7 +47,7 @@ def b(x):
 psi = observables.monomials(8)
 
 # generate data
-X = Omega.rand(1000) # generate test points
+X = Omega.rand(10000) # generate test points
 Y = b(X)
 
 # apply generator EDMD
@@ -49,10 +56,39 @@ K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
 # printMatrix(K, 'K_gEDMD')
 printVector(np.real(d), 'd_gEDMD')
 
-V[:, 1] /= V[3, 1]; V[:, 3] /= V[10, 3]; V[:, 4] /= V[6, 4] # normalize eigenvectors for convenience
+V[:, 1] /= V[3, 1]; V[:, 3] /= V[10, 3]; V[:, 4] /= V[6, 4] # nordmalize eigenvectors for convenience
 for i in range(evs):
     psi.display(np.real(V[:, i]), 2, 'phi_%d' % (i+1))
 print('')
+#This repeats the above but with fewer test points
+# generate data
+Xnew = Omega.rand(100000) # generate test points
+Ynew = b(Xnew)
+
+# apply generator EDMD
+evs = 8 # number of eigenvalues/eigenfunctions to be computed
+Knew, dnew, Vnew = algorithms.gedmd(Xnew, Ynew, None, psi, evs=evs, operator='K')
+# printMatrix(K, 'K_gEDMD')
+printVector(np.real(dnew), 'd_gEDMD')
+
+Vnew[:, 1] /= Vnew[3, 1]; Vnew[:, 3] /= Vnew[10, 3]; Vnew[:, 4] /= Vnew[6, 4] # nordmalize eigenvectors for convenience
+for i in range(evs):
+    psi.display(np.real(Vnew[:, i]), 2, 'phi_%d' % (i+1))
+print('')
+#Now we calculate the distance between the eigefunction i of the two different sets of test points V and Vnew for each i
+for i in range(evs):
+    print(np.linalg.norm(V[:, i]-Vnew[:, i]))
+print('')
+#Now distance between i and jth eignevector for all i,j, stores them in a list and sorts them from smallest to largest
+distances = []
+for i in range(evs):
+    for j in range(evs):
+        distances.append(np.linalg.norm(V[:, i]-Vnew[:, j]))
+distances.sort()
+print(distances)
+
+
+
 
 # system identification
 B = np.zeros((K.shape[0], Omega.dimension()))
