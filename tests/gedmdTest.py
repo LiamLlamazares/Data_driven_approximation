@@ -20,6 +20,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, 'C:/Users/illam/Documents/GitHub/gEDMD_code') # add path to gEDMD package, should be changed to your local path
+sys.path.insert(0, 'C:/Users/illam/Documents/GitHub/gEDMD_code/d3s') # add path to d3s package, should be changed to your local path
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
