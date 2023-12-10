@@ -140,4 +140,3 @@ for k in range(len(testpoints)):
     print(operatornorm2/operatornorm)
     print("ratio of operator norm of Kexact-K to operator norm of Kexact for "+ str(testpoints[k])+ " test points")
     print(np.linalg.norm(K[:,:,k]-Kexact)/np.linalg.norm(Kexact))
-1-1
