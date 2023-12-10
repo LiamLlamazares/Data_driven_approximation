@@ -47,7 +47,7 @@ def b(x):
 psi = observables.monomials(8)
 
 # generate data
-Xexact = Omega.rand(1000000) # generate test points
+Xexact = Omega.rand(100000) # generate test points
 Yexact = b(Xexact)
 
 # apply generator EDMD
