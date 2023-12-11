@@ -42,6 +42,8 @@ error=10**10
 #list to store the error of each step
 errorlist=[]
 # Loop that increases the number of data points until the operator error is smaller than epsilon
+#list to store the number of data points used in each step
+datapointslist=[]
 while error>0.3:
     datapointsexact=10*datapoints
     Xexact = Omega.rand(datapointsexact) 
@@ -58,22 +60,29 @@ while error>0.3:
     #We store the error in a list
     errorlist.append(error)
     print("error is "+ str(error) + " for "+ str(datapoints) + " data points")
+    #Store the number of data points used in each step
+    datapointslist.append(datapoints)
     #We increase the number of data points by a factor of 2
     datapoints=datapoints*2
 
 
 plt.figure()
 # table of datapoints used in loop
-datapointslist=[int((N+1)*(N+2)/2)*2**x for x in range(0,len(errorlist))]
+#datapointslist=[int((N+1)*(N+2)/2)*2**x for x in range(0,len(errorlist))]
 #We log-log plot the error as a function of the number of data points
 plt.loglog(datapointslist,errorlist)
-#We also log-log plot the line with log-log slope -1/2 starting at the first error
-plt.figure()
-plt.loglog(datapointslist,[errorlist[0]*1 / (n + 1) for n in range(0, len(errorlist))])
+#We also log-log plot the line with log-log slope -1/2 starting at the first error and datapoint
+plt.loglog(datapointslist,np.power(datapointslist,-1/2)*errorlist[0]/np.power(datapointslist[0],-1/2))
+#We also log-log plot the line with log-log slope -1 starting at the first error and datapoint
+plt.loglog(datapointslist,np.power(datapointslist,-1.0)*errorlist[0]/np.power(datapointslist[0],-1.0))
+
+
 
 plt.xlabel("Number of data points")
 plt.ylabel("Operator error")
 plt.title("Operator error as a function of the number of data points for N=8")
+#Legends
+plt.legend(["Operator error","slope -1/2","slope -1"])
 plt.show()
 
 1-1
@@ -85,5 +94,5 @@ predicted=(errorlist[0]**2+int((N+1)*(N+2)/2)*epsilon**2-(epsilon**2))/(epsilon*
 
 
 
-plt.loglog(testpoints,frobeniusnorm)
-
+plt.loglog(datapointslist,predicted)
+1-1
