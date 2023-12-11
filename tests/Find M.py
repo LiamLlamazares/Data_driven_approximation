@@ -54,7 +54,7 @@ while error>0.3:
     #We calculate the singular values of Kexact-K
     u,s,vh=np.linalg.svd(Kexact-K)
     #Then we take the square root of the largest singular value
-    error=np.sqrt(np.max(s))
+    error=np.max(s)
     #We store the error in a list
     errorlist.append(error)
     print("error is "+ str(error) + " for "+ str(datapoints) + " data points")

@@ -32,7 +32,7 @@ plt.ion()
 #%% Simple deterministic system -------------------------------------------------------------------
 
 # define domain
-bounds = np.array([[-2, 2], [-2, 2]])
+bounds = np.array([[-1, 1], [-1, 1]])
 boxes = np.array([50, 50])
 Omega = domain.discretization(bounds, boxes)
 
@@ -57,6 +57,8 @@ evdistancesnorm=np.zeros((len(dictionarylengths)))
 evdistanceslist=[]
 # we define a list in which we store the singular values of Kexact-K for each dictionary length
 operatorerror=np.zeros((len(dictionarylengths)))
+#We define a list in which we store the operator norm of Kexact for each dictionary length
+operatornormKexact=np.zeros((len(dictionarylengths)))
 
 
 for i in dictionarylengths:
@@ -84,6 +86,10 @@ for i in dictionarylengths:
     for l in range(Vexact.shape[1]):
         Vnormalizedexact[:,l]=Vexact[:,l]/np.linalg.norm(Vexact[:,l])
         Vnormalized[:,l]=V[:,l]/np.linalg.norm(V[:,l])
+    
+    
+    
+
        
     #We calculate the distance between the eigefunction i of the two operators V and Vexact for each i
     evdistances = []
@@ -104,7 +110,11 @@ for i in dictionarylengths:
     u,s,vh=np.linalg.svd(Kexact-K)
     #Then we take the square root of the largest singular value
     print("operator norm of Kexact-K for "+ str(i)+ " dictionary lengths")
-    operatorerror[i]=np.sqrt(np.max(s))
+    operatorerror[i]=np.max(s)
+    #this calculates the operator norm of Kexact using its singular values
+    u,s,vh=np.linalg.svd(Kexact)
+    #Now we add it to the list of operator norms
+    operatornormKexact[i]=np.max(s)
 print("operator norm of Kexact-K for each dictionary length")
 print(operatorerror)
 print(evdistancesnorm) 
@@ -114,6 +124,19 @@ numberobservables=np.zeros((len(dictionarylengths)))
 for i in range(len(dictionarylengths)):
     numberobservables[i]=int((i+1)*(i+2)/2)
 
+# Log-Log-plot the operator norm of Kexact versus the number of observables
+plt.figure()
+plt.loglog(numberobservables,operatornormKexact)
+#Line of log-log plot with slope 1 to see if the operator norm of Kexact is proportional to the number of observables
+plt.loglog(numberobservables,np.power(numberobservables,1)*operatornormKexact[1]/np.power(numberobservables[1],1))
+#Line of log-log plot with slope 2 to see if the operator norm of Kexact is proportional to the number of observables squared
+plt.loglog(numberobservables,np.power(numberobservables,2)*operatornormKexact[1]/np.power(numberobservables[1],2))
+#legends
+plt.legend(['operator norm of Kexact','slope 1','slope 2'])
+plt.xlabel('number of observables')
+plt.ylabel('operator norm of Kexact')
+
+
 plt.figure()
 # log log plot the norm of the eigenvectors vs the number of dictionary lengths
 plt.loglog(numberobservables[5:11],evdistancesnorm[5:11])
@@ -121,21 +144,21 @@ plt.loglog(numberobservables[5:11],evdistancesnorm[5:11])
 plt.loglog(numberobservables[1:11],operatorerror[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
 plt.loglog(numberobservables[1:11],eigenvalueserrorlist[1:11])
-# also plot a line with log log slope 0.5 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1)*operatorerror[1]/np.power(numberobservables[1],1))
-# also plot a line with log log slope 1 to see if the error of the operators is proportional to the number of observables squared
+# also plot a line with log log slope 2 to see if the error of the operators is proportional to the number of observables squared
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operatorerror[1]/np.power(numberobservables[1],2))
+# also plot a line with log log slope 1.5 to see if the error of the operators is proportional to the number of observables to the power 1.5
 plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operatorerror[1]/np.power(numberobservables[1],1.5))
 
 plt.xlabel('number of observables')
 
 #plot legends
-plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 1','slope 1.5'])
+plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 2','slope 1.5'])
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
 
 
 # repeat code lines 60-100 10 times and take the average of evdistancesnorm and operatorerror
-M=20
+M=10
 #We define a list in which we store the norm of the first evs elements of evdistances for each dictionary length and each run
 evdistancesnorms=np.zeros((len(dictionarylengths),M))
 #We define a list in which we store the first evs elements of evdistances for each dictionary length
@@ -149,6 +172,7 @@ evdistancesnormaverage=np.zeros((len(dictionarylengths)))
 operatorerroraverage=np.zeros((len(dictionarylengths)))
 eigenvalueserroraverage=np.zeros((len(dictionarylengths)))
 
+#We repeat the above for M runs
 for m in range(M):
     for i in dictionarylengths:
         # generate data
@@ -192,7 +216,7 @@ for m in range(M):
         #We calculate the singular values of Kexact-K
         u,s,vh=np.linalg.svd(Kexact-K)
         #Then we take the largest singular value
-        operatorerrors[i,m]=np.sqrt(np.max(s))
+        operatorerrors[i,m]=np.max(s)
 #average over the runs
 for i in dictionarylengths:
     evdistancesnormaverage[i]=np.average(evdistancesnorms[i,:])
@@ -207,11 +231,12 @@ plt.loglog(numberobservables[1:11],operatorerroraverage[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
 plt.loglog(numberobservables[1:11],eigenvalueserroraverage[1:11])
 # also plot a line with log log slope 1 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1)*operatorerroraverage[1]/np.power(numberobservables[1],1))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operatorerroraverage[1]/np.power(numberobservables[1],2))
 # also plot a line with log log slope 1,25 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.25)*operatorerroraverage[1]/np.power(numberobservables[1],1.25))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operatorerroraverage[1]/np.power(numberobservables[1],1.5))
 # plot legends
-plt.legend(['error of eigenvectors','error of operators',"error of eigenvalues",'slope 1','slope 1.25'])
+plt.legend(['error of eigenvectors','error of operators',"error of eigenvalues",'slope 2','slope 1.5'])
 plt.xlabel('number of observables')
 plt.show()
-        
+1-1
+1-1    

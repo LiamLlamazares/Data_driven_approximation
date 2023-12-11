@@ -46,7 +46,7 @@ def b(x):
 # define observables
 N=8
 evs = int((N+1)*(N+2)/2)
-evs=8
+
 psi = observables.monomials(N)
 
 # generate data
@@ -113,12 +113,15 @@ for k in range(len(testpoints)):
     #We calculate the singular values of Kexact-K
     u,s,vh=np.linalg.svd(Kexact-K[:,:,k])
     #Then we take the square root of the largest singular value
-    operatorerror[k]=np.sqrt(np.max(s))
+    operatorerror[k]=np.max(s)
 
-#Frobenius Norm
+#Frobenius Error
 frobeniuserror=np.zeros((len(testpoints),1))
 for k in range(len(testpoints)):
     frobeniuserror[k]=np.linalg.norm(K[:,:,k]-Kexact)
+
+
+
 
 #loglog plot
 plt.figure()
@@ -127,9 +130,9 @@ plt.loglog(testpoints,frobeniuserror)
 # also plot a line with log log slope -1/2 to see if the error of the operators is proportional to the number of observables squared
 plt.loglog(testpoints,(np.power(testpoints,-0.5)*operatorerror[1]/np.power(testpoints[1],-0.5)))
 # also plot a line with log log slope -1/3 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(testpoints,(np.power(testpoints,-0.3333)*operatorerror[1]/np.power(testpoints[1],-0.3333)))
+#plt.loglog(testpoints,(np.power(testpoints,-0.3333)*operatorerror[1]/np.power(testpoints[1],-0.3333)))
 # also plot a line with log log slope -1/4 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(testpoints,(np.power(testpoints,-1/4)*operatorerror[1]/np.power(testpoints[1],-1/4)))
+#plt.loglog(testpoints,(np.power(testpoints,-1/4)*operatorerror[1]/np.power(testpoints[1],-1/4)))
 
 plt.xlabel('number of test points')
 plt.ylabel('opertor error')
