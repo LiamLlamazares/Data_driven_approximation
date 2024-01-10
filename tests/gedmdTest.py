@@ -12,12 +12,22 @@ import numpy.polynomial
 import scipy as sp
 import matplotlib.pyplot as plt
 import sys
-sys.path.insert(0, 'C:/Users/samir/gEDMD_code') # add path to gEDMD package, should be changed to your local path
-sys.path.insert(0, 'C:/Users/samir/gEDMD_code/d3s') # add path to gEDMD package, should be changed to your local path
-import d3s.algorithms as algorithms
+import os
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
+# Get the parent directory
+parent_dir = os.path.dirname(script_dir)
+
+# Add the parent directory to the system path
+sys.path.insert(0, parent_dir)
+
+print('The parent directory is: ' + parent_dir)
+
 import d3s.domain as domain
 import d3s.observables as observables
 import d3s.systems as systems
+import d3s.algorithms as algorithms
 
 from d3s.tools import printVector, printMatrix
 
