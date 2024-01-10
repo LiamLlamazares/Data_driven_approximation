@@ -24,7 +24,7 @@ sys.path.insert(0, 'C:/Users/illam/Documents/GitHub/gEDMD_code/d3s') # add path 
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
-#import d3s.systems as systems
+import d3s.systems as systems
 
 from d3s.tools import printVector, printMatrix
 
