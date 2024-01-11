@@ -1,4 +1,6 @@
 
+# In this file we compute the error of the eigenvalues and eigenvectors of the operator matrix Kexact for different dictionary lengths
+# We plot the errors as a function of the number of observables
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -37,16 +39,18 @@ delta = -0.7
 dictionarylengths= range(0,11+1)
 datapoints=1000
 datapointsexact=100000
+
+#This corresponds to the ODE dx1=gamma*x1dt, dx2=delta*(x2-x1^2)dt
 def b(x):
     return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
 #We define a list in which we store the error of the eigenvalues for each dictionary length
-eigenvalueserrorlist=[]
+eigenvalue_errors=[]
 #We define a list in which we store the norm of the first evs elements of evdistances for each dictionary length 
-evdistancesnorm=np.zeros((len(dictionarylengths)))
+eigenvector_errors=np.zeros((len(dictionarylengths)))
 #We define a list in which we store the first evs elements of evdistances for each dictionary length
 evdistanceslist=[]
 # we define a list in which we store the singular values of Kexact-K for each dictionary length
-operatorerror=np.zeros((len(dictionarylengths)))
+operator_errors=np.zeros((len(dictionarylengths)))
 #We define a list in which we store the operator norm of Kexact for each dictionary length
 operatornormKexact=np.zeros((len(dictionarylengths)))
 
@@ -69,7 +73,7 @@ for i in dictionarylengths:
     eigenvaluesK=np.sort(np.linalg.eigvals(K))
     #this calculates the error between the eigenvalues of Kexact and K
     eigenvalueserror=np.linalg.norm(eigenvaluesKexact-eigenvaluesK)
-    eigenvalueserrorlist.append(eigenvalueserror)
+    eigenvalue_errors.append(eigenvalueserror)
     #This normalizes the columns of V by dividing by their norm
     Vnormalizedexact=np.zeros((Vexact.shape[0],Vexact.shape[1]))
     Vnormalized=np.zeros((Vexact.shape[0],Vexact.shape[1]))
@@ -85,29 +89,34 @@ for i in dictionarylengths:
     evdistances = []
     for j in range(evs):
         for k in range(evs):
-            evdistances.append(np.linalg.norm(Vnormalizedexact[:,j]-Vexact[:, k]))
-            evdistances.append(np.linalg.norm(Vnormalizedexact[:,j]+Vexact[:, k]))
+            evdistances.append(np.linalg.norm(Vnormalizedexact[:,j]-Vnormalized[:, k]))
+            evdistances.append(np.linalg.norm(Vnormalizedexact[:,j]+Vnormalized[:, k]))
+# removes repeated entries
+    evdistances = list(dict.fromkeys(evdistances))
     evdistances.sort()
+
     
     evdistanceslist.append(evdistances[:evs])
      
-    evdistancesnorm[i]=np.linalg.norm(evdistances[:evs])
+    eigenvector_errors[i]=np.linalg.norm(evdistances[:evs])
     print("Error of "+ str(evs)+ " normalized eigenfunctions")
     print(evdistances[:evs])
     print("error norm of eigenvalues "+str(np.linalg.norm(evdistances[:evs]) ))
+
 
     #We calculate the singular values of Kexact-K
     u,s,vh=np.linalg.svd(Kexact-K)
     #Then we take the square root of the largest singular value
     print("operator norm of Kexact-K for "+ str(i)+ " dictionary lengths")
-    operatorerror[i]=np.max(s)
+    operator_errors[i]=np.max(s)
     #this calculates the operator norm of Kexact using its singular values
     u,s,vh=np.linalg.svd(Kexact)
     #Now we add it to the list of operator norms
     operatornormKexact[i]=np.max(s)
 print("operator norm of Kexact-K for each dictionary length")
-print(operatorerror)
-print(evdistancesnorm) 
+print(operator_errors)
+print("euclidean norm of difference of eigenvalues for each dictionary length")
+print(eigenvector_errors) 
 
 
 numberobservables=np.zeros((len(dictionarylengths)))
@@ -129,15 +138,15 @@ plt.ylabel('operator norm of Kexact')
 
 plt.figure()
 # log log plot the norm of the eigenvectors vs the number of dictionary lengths
-plt.loglog(numberobservables[5:11],evdistancesnorm[5:11])
+plt.loglog(numberobservables[5:11],eigenvector_errors[5:11])
 # log log plot the error of the operators vs the number of observables
-plt.loglog(numberobservables[1:11],operatorerror[1:11])
+plt.loglog(numberobservables[1:11],operator_errors[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
-plt.loglog(numberobservables[1:11],eigenvalueserrorlist[1:11])
+plt.loglog(numberobservables[1:11],eigenvalue_errors[1:11])
 # also plot a line with log log slope 2 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operatorerror[1]/np.power(numberobservables[1],2))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operator_errors[1]/np.power(numberobservables[1],2))
 # also plot a line with log log slope 1.5 to see if the error of the operators is proportional to the number of observables to the power 1.5
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operatorerror[1]/np.power(numberobservables[1],1.5))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operator_errors[1]/np.power(numberobservables[1],1.5))
 
 plt.xlabel('number of observables')
 
@@ -147,19 +156,19 @@ plt.title('log-log-plot of error of operators vs number of observables')
 plt.show(block=True)
 
 
-# repeat code lines 60-100 10 times and take the average of evdistancesnorm and operatorerror
+# repeat code lines 60-100 10 times and take the average of eigenvector_errors and operator_errors
 M=10
 #We define a list in which we store the norm of the first evs elements of evdistances for each dictionary length and each run
-evdistancesnorms=np.zeros((len(dictionarylengths),M))
+eigenvector_errorss=np.zeros((len(dictionarylengths),M))
 #We define a list in which we store the first evs elements of evdistances for each dictionary length
 evdistanceslists=[]
 # We define a list in which we store the eigenvalueserror for each dictionary length and each run
-eigenvalueserrorlists=np.zeros((len(dictionarylengths),M))
+eigenvalue_errorss=np.zeros((len(dictionarylengths),M))
 # we define a list in which we store the singular values of Kexact-K for each dictionary lengthand each run
-operatorerrors=np.zeros((len(dictionarylengths),M))
+operator_errorss=np.zeros((len(dictionarylengths),M))
 #We define a list in which we store the average of the norm of the first evs elements of evdistances for each dictionary length
-evdistancesnormaverage=np.zeros((len(dictionarylengths)))
-operatorerroraverage=np.zeros((len(dictionarylengths)))
+eigenvector_errorsaverage=np.zeros((len(dictionarylengths)))
+operator_errorsaverage=np.zeros((len(dictionarylengths)))
 eigenvalueserroraverage=np.zeros((len(dictionarylengths)))
 
 #We repeat the above for M runs
@@ -183,7 +192,7 @@ for m in range(M):
         eigenvaluesK=np.sort(np.linalg.eigvals(K))
         #this calculates the error between the eigenvalues of Kexact and K
         eigenvalueserror=np.linalg.norm(eigenvaluesKexact-eigenvaluesK)
-        eigenvalueserrorlists[i,m]=eigenvalueserror
+        eigenvalue_errorss[i,m]=eigenvalueserror
         
         #This normalizes the columns of V by dividing by their norm
         Vnormalizedexact=np.zeros((Vexact.shape[0],Vexact.shape[1]))
@@ -202,28 +211,28 @@ for m in range(M):
         
         evdistanceslists.append(evdistances[:evs])
         
-        evdistancesnorms[i,m]=np.linalg.norm(evdistances[:evs])
+        eigenvector_errorss[i,m]=np.linalg.norm(evdistances[:evs])
         #We calculate the singular values of Kexact-K
         u,s,vh=np.linalg.svd(Kexact-K)
         #Then we take the largest singular value
-        operatorerrors[i,m]=np.max(s)
+        operator_errorss[i,m]=np.max(s)
 #average over the runs
 for i in dictionarylengths:
-    evdistancesnormaverage[i]=np.average(evdistancesnorms[i,:])
-    operatorerroraverage[i]=np.average(operatorerrors[i,:])
-    eigenvalueserroraverage[i]=np.average(eigenvalueserrorlists[i,:])
+    eigenvector_errorsaverage[i]=np.average(eigenvector_errorss[i,:])
+    operator_errorsaverage[i]=np.average(operator_errorss[i,:])
+    eigenvalueserroraverage[i]=np.average(eigenvalue_errorss[i,:])
 #plots
 plt.figure()
 # log log plot the average error of the eigenvectors vs the number of dictionary lengths
-plt.loglog(numberobservables[5:11],evdistancesnormaverage[5:11])
+plt.loglog(numberobservables[5:11],eigenvector_errorsaverage[5:11])
 # log log plot the average error of the operators vs the number of observables
-plt.loglog(numberobservables[1:11],operatorerroraverage[1:11])
+plt.loglog(numberobservables[1:11],operator_errorsaverage[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
 plt.loglog(numberobservables[1:11],eigenvalueserroraverage[1:11])
 # also plot a line with log log slope 1 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operatorerroraverage[1]/np.power(numberobservables[1],2))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],2)*operator_errorsaverage[1]/np.power(numberobservables[1],2))
 # also plot a line with log log slope 1,25 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operatorerroraverage[1]/np.power(numberobservables[1],1.5))
+plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operator_errorsaverage[1]/np.power(numberobservables[1],1.5))
 # plot legends
 plt.legend(['error of eigenvectors','error of operators',"error of eigenvalues",'slope 2','slope 1.5'])
 plt.xlabel('number of observables')
