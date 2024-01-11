@@ -125,6 +125,15 @@ class monomials(object):
                     print(' x_%d' % (j+1), end = '')
                 else:
                     print(' x_%d^%d' % (j+1, p[j]), end = '')
+    
+    def length(self, x):
+        '''
+        Calculate the number of monomials for all data points in x.
+        '''
+        [d, m] = x.shape
+        c = allMonomialPowers(d, self.p)
+        n = c.shape[1]
+        return n
 
 class indicators(object):
     '''
