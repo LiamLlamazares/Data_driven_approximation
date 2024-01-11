@@ -1,12 +1,5 @@
 import sysconfig
 import pybind11
-
-# python_include_path = sysconfig.get_paths()["include"]
-# pybind11_include_path = pybind11.get_include()
-# print(f"Python include path: {python_include_path}")
-# print(f"pybind11 include path: {pybind11_include_path}")
-#!/usr/bin/env 4python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import numpy.polynomial
 import scipy as sp
