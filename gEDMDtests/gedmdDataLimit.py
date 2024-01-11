@@ -1,8 +1,4 @@
-import sysconfig
-import pybind11
 import numpy as np
-import numpy.polynomial
-import scipy as sp
 import matplotlib.pyplot as plt
 import sys
 import sys
@@ -16,7 +12,6 @@ parent_dir = os.path.dirname(script_dir)
 # Add the parent directory to the system path
 sys.path.insert(0, parent_dir)
 
-print('The parent directory is: ' + parent_dir)
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
@@ -44,20 +39,32 @@ def b(x):
 psi = observables.monomials(8)
 
 # generate data
-Xexact = Omega.rand(100000) # generate test points
+Xexact = Omega.rand(1000000) # generate test points
 Yexact = b(Xexact)
 
 # apply generator EDMD
+
+#In the notation we use in our new paper: 
+# C= <A psi,psi>, where A is the generator of the system
+# G = <psi,psi>, is the Gramm matrix
+# A =G^{-1} C^T is the operator matrix
+# In the notation in the old paper by Stefan et al:
+# K = operator matrix = A
+# C0 = gram matrix = G
+# C1 = stiffness matrix = C
+
+
 evs = 8 # number of eigenvalues/eigenfunctions to be computed
+
+# Gets the operator matrix Kexact, the eigenvalues dexact and the eigenvectors Vexact for a lot of test points
 Kexact, dexact, Vexact = algorithms.gedmd(Xexact, Yexact, None, psi, evs=evs, operator='K')
-# printMatrix(K, 'K_gEDMD')
+
 
 #This normalizes the columns of V by dividing by their norm
 normalizedVexact=np.zeros((Vexact.shape[0],Vexact.shape[1]))
 for i in range(Vexact.shape[1]):
     normalizedVexact[:,i]=Vexact[:,i]/np.linalg.norm(Vexact[:,i])
-for i in range(Vexact.shape[1]):
-    print(np.linalg.norm(normalizedVexact[:,i]))
+
 
 #A loop that repeats the above, with fewer test points the number we use is 100,1000,10000,100000,500000
 # generate data
@@ -70,14 +77,10 @@ for i in range(len(testpoints)):
     Y=b(X)
     K2, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
     K[:,:,i]=K2
-    for j in range(V.shape[1]):
-        Vnormalized[:,j,i]=V[:,j]/np.linalg.norm(V[:,j])
-        #print the norm of the columns of Vnormalized
-        print(np.linalg.norm(Vnormalized[:,j,i]))  
 
-K.shape              
-1-1    
+K.shape                  
 # For each amount of data points, we calculate the distance between the eigefunction i of the two different sets of test points V and Vnew for each i
+#Here V[:,i,k] is the i-th eigenvector of the operator matrix K for the k-th set of test points
 for k in range(len(testpoints)):
     distances = []
     for i in range(evs):
@@ -86,55 +89,71 @@ for k in range(len(testpoints)):
             distances.append(np.linalg.norm(Vnormalized[:,i,k]+Vexact[:, j]))
     distances.sort()
     print("Error of "+ str(evs)+ " normalized eigenfunctions for "+ str(testpoints[k])+ " test points")
+    # We only print the first evs entries of the list distances, because they are the ones where the same eigenfunctions are compared
     print(distances[:evs])
     print("error norm of eigenvalues")
     print(np.linalg.norm(distances[:evs]))
-    print("error norm of operators")
+    print("Frobenius distance of operators")
     print(np.linalg.norm(K[:,:,k]-Kexact))
 print(Vexact)
 
-
+#Prints the expression of the approximate normalized eigenfunctions as a linear combination of the monomials
 for i in range(len(testpoints)):
     for j in range(evs):
         psi.display(np.real(Vnormalized[:,j, i]), 2, 'phi_%d' % (j+1))
 
+#Prints the expression of the 'exact' normalized eigenfunctions as a linear combination of the monomials
 for i in range(evs):
     psi.display(np.real(normalizedVexact[:, i]), 2, 'phi_%d' % (i+1))
 print('')
 
-1-1
+# We plot the frobenius error between operator matrices as a function of number of test points
 frobeniusnorm=np.zeros((len(testpoints),1))
 for k in range(len(testpoints)):
     frobeniusnorm[k]=np.linalg.norm(K[:,:,k]-Kexact)
     
-plt.plot(testpoints,frobeniusnorm)
-plt.xlabel('number of test points')
-plt.ylabel('frobenius norm of operator difference')
-plt.title('frobenius norm of operator difference vs number of test points')
-plt.show(block=True)
 #loglog plot
 plt.loglog(testpoints,frobeniusnorm)
 plt.xlabel('number of test points')
 plt.ylabel('frobenius norm of operator difference')
 plt.title('log-log-plot of frobenius norm of operator difference vs number of test points')
-plt.show(block=True)
-
+plt.show()
 #This calculates the operator norm of Kexact, which is defined as the largest singular value of Kexact
 #First we calculate the singular values of Kexact
 u,s,vh=np.linalg.svd(Kexact)
 #Then we take the largest singular value
-operatornorm=np.max(s)
-
+operatornorm_exact=np.max(s)
 #This calculates the operator norm of Kexact-K, which is defined as the largest singular value of Kexact-K
 #First we calculate the singular values of Kexact-K
+errorratio=np.zeros((len(testpoints),1))
 for k in range(len(testpoints)):
     u,s,vh=np.linalg.svd(K[:,:,k]-Kexact)
     #Then we take the largest singular value
-    operatornorm2=np.max(s)
+    operatornorm_approx=np.max(s)
     print("operator norm of Kexact-K for "+ str(testpoints[k])+ " test points")
-    print(operatornorm2)
+    print(operatornorm_approx)
     print("ratio of operator norm of Kexact-K to operator norm of Kexact for "+ str(testpoints[k])+ " test points")
-    print(operatornorm2/operatornorm)
+    print(operatornorm_approx/operatornorm_exact)
+    errorratio[k] = np.linalg.norm(K[:,:,k]-Kexact)/np.linalg.norm(Kexact)
     print("ratio of operator norm of Kexact-K to operator norm of Kexact for "+ str(testpoints[k])+ " test points")
-    print(np.linalg.norm(K[:,:,k]-Kexact)/np.linalg.norm(Kexact))
+    print(errorratio[k])
+# log log plot the ratio of the operator norm of Kexact-K to the operator norm of Kexact as a function of the number of test points
+plt.figure()
+plt.loglog(testpoints,errorratio)
+plt.xlabel('number of test points')
+plt.ylabel('ratio of operator norm of Kexact-K to operator norm of Kexact')
+plt.title('log-log-plot of ratio of operator norm of Kexact-K to operator norm of Kexact vs number of test points')
+plt.show()
 1-1
+#loglog plot of frobenius norm  error minus operator norm error in absolute value
+plt.figure()
+plt.loglog(testpoints,np.abs(frobeniusnorm/operatornorm_exact-errorratio))
+plt.xlabel('number of test points')
+plt.ylabel('absolute value of difference between frobenius norm error and operator norm error')
+plt.title('log-log-plot of absolute value of difference between frobenius norm error and operator norm error vs number of test points')
+plt.show()
+1-1
+# # Prints individually ratio erros for frobenius norm and operator norm
+# for k in range(len(testpoints)):
+#     print("ratio of frobenius norm error and error ratio to operator norm error for "+ str(testpoints[k])+ " test points")
+#     print([frobeniusnorm[k]/operatornorm_exact,errorratio[k]])
