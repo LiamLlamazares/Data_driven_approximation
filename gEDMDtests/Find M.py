@@ -95,7 +95,7 @@ plt.ylabel("Operator error")
 plt.title("Operator error as a function of the number of data points for N=8")
 #Legends
 plt.legend(["Operator error","slope -1/2","slope -1"])
-plt.show()
+plt.show(block=True)
 
 1-1
 

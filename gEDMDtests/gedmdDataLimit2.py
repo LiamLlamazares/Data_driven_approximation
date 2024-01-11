@@ -130,7 +130,7 @@ plt.xlabel('number of test points')
 plt.ylabel('opertor error')
 plt.title('log-log-plot of operator error vs number of test points')
 plt.legend(['operator error',"frobenius error",'slope -1/2','slope -1/3','slope -1/4'])
-plt.show()
+plt.show(block=True)
 
 #This calculates the operator norm of Kexact, which is defined as the largest singular value of Kexact
 #First we calculate the singular values of Kexact

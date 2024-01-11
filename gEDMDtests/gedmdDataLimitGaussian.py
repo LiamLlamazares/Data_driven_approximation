@@ -1,10 +1,5 @@
-import sysconfig
-import pybind11
 import numpy as np
-import numpy.polynomial
-import scipy as sp
 import matplotlib.pyplot as plt
-import sys
 import sys
 import os
 # Get the directory of the current script
@@ -17,6 +12,7 @@ parent_dir = os.path.dirname(script_dir)
 sys.path.insert(0, parent_dir)
 
 print('The parent directory is: ' + parent_dir)
+
 import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
@@ -41,29 +37,42 @@ def b(x):
     return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
 
 # define observables
-psi = observables.monomials(8)
+N=8
+evs = 8
+psi = observables.gaussians(Omega, 0.2)
 
 # generate data
-Xexact = Omega.rand(100000) # generate test points
+Xexact = Omega.rand(1000) # generate test points
 Yexact = b(Xexact)
+# define observables
+psi = observables.gaussians(Omega, 0.2)
 
 # apply generator EDMD
-evs = 8 # number of eigenvalues/eigenfunctions to be computed
-Kexact, dexact, Vexact = algorithms.gedmd(Xexact, Yexact, None, psi, evs=evs, operator='K')
-# printMatrix(K, 'K_gEDMD')
+evs = 3 # number of eigenvalues/eigenfunctions to be computed
+K, d, V = algorithms.gedmd(Xexact, Yexact, None, psi, evs=evs, operator='P')
+printVector(np.real(d), 'd')
 
+# plot eigenfunctions
+c = Omega.midpointGrid()
+Psi_c = psi(c)
+for i in range(evs):
+    plt.figure(i+1);
+    plt.clf()
+    Omega.plot(np.real( V[:, i].T @ Psi_c ), mode='3D')
+
+1-1
 #This normalizes the columns of V by dividing by their norm
-normalizedVexact=np.zeros((Vexact.shape[0],Vexact.shape[1]))
+normalizedVexact=np.zeros((Vexact.shape[0],Vexact.shape[1]),dtype="complex_")
 for i in range(Vexact.shape[1]):
     normalizedVexact[:,i]=Vexact[:,i]/np.linalg.norm(Vexact[:,i])
-for i in range(Vexact.shape[1]):
-    print(np.linalg.norm(normalizedVexact[:,i]))
+#for i in range(Vexact.shape[1]):
+ #   print(np.linalg.norm(normalizedVexact[:,i]))
 
 #A loop that repeats the above, with fewer test points the number we use is 100,1000,10000,100000,500000
 # generate data
 testpoints= [Vexact.shape[0]*2**x for x in range(0,15)]
 
-Vnormalized=np.zeros((Vexact.shape[0],Vexact.shape[1],len(testpoints)))
+Vnormalized=np.zeros((Vexact.shape[0],Vexact.shape[1],len(testpoints)),dtype="complex_")
 K=np.zeros((Vexact.shape[0],Vexact.shape[0],len(testpoints)))
 for i in range(len(testpoints)):
     X=Omega.rand(testpoints[i])
@@ -73,10 +82,9 @@ for i in range(len(testpoints)):
     for j in range(V.shape[1]):
         Vnormalized[:,j,i]=V[:,j]/np.linalg.norm(V[:,j])
         #print the norm of the columns of Vnormalized
-        print(np.linalg.norm(Vnormalized[:,j,i]))  
+       # print(np.linalg.norm(Vnormalized[:,j,i]))  
 
-K.shape              
-1-1    
+
 # For each amount of data points, we calculate the distance between the eigefunction i of the two different sets of test points V and Vnew for each i
 for k in range(len(testpoints)):
     distances = []
@@ -85,39 +93,49 @@ for k in range(len(testpoints)):
             distances.append(np.linalg.norm(Vnormalized[:,i,k]-Vexact[:, j]))
             distances.append(np.linalg.norm(Vnormalized[:,i,k]+Vexact[:, j]))
     distances.sort()
-    print("Error of "+ str(evs)+ " normalized eigenfunctions for "+ str(testpoints[k])+ " test points")
-    print(distances[:evs])
-    print("error norm of eigenvalues")
-    print(np.linalg.norm(distances[:evs]))
-    print("error norm of operators")
-    print(np.linalg.norm(K[:,:,k]-Kexact))
-print(Vexact)
+    #print("Error of "+ str(evs)+ " normalized eigenfunctions for "+ str(testpoints[k])+ " test points")
+    #print(distances[:evs])
+    #print("error norm of eigenvalues")
+    #print(np.linalg.norm(distances[:evs]))
+    #print("error norm of operators")
+    #print(np.linalg.norm(K[:,:,k]-Kexact))
+#print(Vexact)
 
 
-for i in range(len(testpoints)):
-    for j in range(evs):
-        psi.display(np.real(Vnormalized[:,j, i]), 2, 'phi_%d' % (j+1))
+#for i in range(len(testpoints)):
+ #   for j in range(evs):
+  #      psi.display(np.real(Vnormalized[:,j, i]), 2, 'phi_%d' % (j+1))
 
-for i in range(evs):
-    psi.display(np.real(normalizedVexact[:, i]), 2, 'phi_%d' % (i+1))
-print('')
+#for i in range(evs):
+#    psi.display(np.real(normalizedVexact[:, i]), 2, 'phi_%d' % (i+1))
+#print('')
 
-1-1
-frobeniusnorm=np.zeros((len(testpoints),1))
+
+operatorerror=np.zeros((len(testpoints),1))
 for k in range(len(testpoints)):
-    frobeniusnorm[k]=np.linalg.norm(K[:,:,k]-Kexact)
-    
-plt.plot(testpoints,frobeniusnorm)
-plt.xlabel('number of test points')
-plt.ylabel('frobenius norm of operator difference')
-plt.title('frobenius norm of operator difference vs number of test points')
-plt.show()
+    #We calculate the singular values of Kexact-K
+    u,s,vh=np.linalg.svd(Kexact-K[:,:,k])
+    #Then we take the square root of the largest singular value
+    error=np.sqrt(np.max(s))
+    operatorerror[k]=np.sqrt(np.max(s))
+
+
+
 #loglog plot
-plt.loglog(testpoints,frobeniusnorm)
+plt.figure()
+plt.loglog(testpoints,operatorerror)
+# also plot a line with log log slope -1/2 to see if the error of the operators is proportional to the number of observables squared
+plt.loglog(testpoints,(np.power(testpoints,-0.5)*operatorerror[1]/np.power(testpoints[1],-0.5)))
+# also plot a line with log log slope -1/3 to see if the error of the operators is proportional to the number of observables squared
+plt.loglog(testpoints,(np.power(testpoints,-0.3333)*operatorerror[1]/np.power(testpoints[1],-0.3333)))
+# also plot a line with log log slope -1/4 to see if the error of the operators is proportional to the number of observables squared
+plt.loglog(testpoints,(np.power(testpoints,-1/4)*operatorerror[1]/np.power(testpoints[1],-1/4)))
+
 plt.xlabel('number of test points')
-plt.ylabel('frobenius norm of operator difference')
-plt.title('log-log-plot of frobenius norm of operator difference vs number of test points')
-plt.show()
+plt.ylabel('opertor error')
+plt.title('log-log-plot of operator error vs number of test points')
+plt.legend(['operator error','slope -1/2','slope -1/3','slope -1/4'])
+plt.show(block=True)
 
 #This calculates the operator norm of Kexact, which is defined as the largest singular value of Kexact
 #First we calculate the singular values of Kexact

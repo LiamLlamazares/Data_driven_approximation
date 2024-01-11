@@ -144,7 +144,7 @@ plt.xlabel('number of observables')
 #plot legends
 plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 2','slope 1.5'])
 plt.title('log-log-plot of error of operators vs number of observables')
-plt.show()
+plt.show(block=True)
 
 
 # repeat code lines 60-100 10 times and take the average of evdistancesnorm and operatorerror
@@ -227,6 +227,6 @@ plt.loglog(numberobservables[1:11],np.power(numberobservables[1:11],1.5)*operato
 # plot legends
 plt.legend(['error of eigenvectors','error of operators',"error of eigenvalues",'slope 2','slope 1.5'])
 plt.xlabel('number of observables')
-plt.show()
+plt.show(block=True)
 1-1
 1-1    
