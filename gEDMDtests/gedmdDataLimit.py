@@ -144,15 +144,14 @@ plt.xlabel('number of test points')
 plt.ylabel('ratio of operator norm of Kexact-K to operator norm of Kexact')
 plt.title('log-log-plot of ratio of operator norm of Kexact-K to operator norm of Kexact vs number of test points')
 plt.show()
-1-1
 #loglog plot of frobenius norm  error minus operator norm error in absolute value
 plt.figure()
 plt.loglog(testpoints,np.abs(frobeniusnorm/operatornorm_exact-errorratio))
 plt.xlabel('number of test points')
 plt.ylabel('absolute value of difference between frobenius norm error and operator norm error')
 plt.title('log-log-plot of absolute value of difference between frobenius norm error and operator norm error vs number of test points')
-plt.show()
-1-1
+plt.show(block=True)
+
 # # Prints individually ratio erros for frobenius norm and operator norm
 # for k in range(len(testpoints)):
 #     print("ratio of frobenius norm error and error ratio to operator norm error for "+ str(testpoints[k])+ " test points")
