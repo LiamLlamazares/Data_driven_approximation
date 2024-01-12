@@ -76,7 +76,66 @@ plt.xlabel('number of data points')
 #plot legends
 plt.legend([
     'operator error', 'frobenius error', 'eigenvalue error',
-    'eigenfunction error', 'slope 1', 'slope 0.5'
+    'eigenfunction error', 'slope -1', 'slope -0.5'
 ])
 plt.title('log-log-plot of error of operators vs number of observables')
+plt.show()
+
+# We now do the same but do the average over M runs
+M = 10
+operator_errors = np.zeros((len(data_points_number), M))
+frobenius_errors = np.zeros((len(data_points_number), M))
+eigenvalue_errors = np.zeros((len(data_points_number), M))
+eigenfunction_errors = np.zeros((len(data_points_number), M))
+operator_errors_average = np.zeros((len(data_points_number)))
+frobenius_errors_average = np.zeros((len(data_points_number)))
+eigenvalues_error_average = np.zeros((len(data_points_number)))
+eigenfunction_errors_average = np.zeros((len(data_points_number)))
+
+for m in range(M):
+    for i in range(len(data_points_number)):
+        # generate data
+        Xexact = Omega.rand(1000000)
+        Yexact = b(Xexact)
+        X = Omega.rand(data_points_number[i])
+        Y = b(X)
+        operator_error, frobenius_error, eigenvalue_error, eigenfunction_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
+            Xexact, X, psi, b, Omega=Omega)
+        operator_errors[i, m] = operator_error
+        frobenius_errors[i, m] = frobenius_error
+        eigenvalue_errors[i, m] = eigenvalue_error
+        eigenfunction_errors[i, m] = eigenfunction_error
+
+    operator_errors_average = np.average(operator_errors, axis=1)
+    frobenius_errors_average = np.average(frobenius_errors, axis=1)
+    eigenvalues_error_average = np.average(eigenvalue_errors, axis=1)
+    eigenfunction_errors_average = np.average(eigenfunction_errors, axis=1)
+
+#error plots
+plt.figure()
+plt.loglog(data_points_number, operator_errors_average)
+plt.loglog(data_points_number, frobenius_errors_average)
+plt.loglog(data_points_number, eigenvalues_error_average)
+plt.loglog(data_points_number, eigenfunction_errors_average)
+
+#slope
+plt.loglog(
+    data_points_number,
+    np.power(np.float64(data_points_number), -1) * operator_errors[1] /
+    np.power(np.float64(data_points_number[1]), -1))
+plt.loglog(
+    data_points_number,
+    np.power(np.float64(data_points_number), -0.5) * operator_errors[1] /
+    np.power(np.float64(data_points_number[1]), -0.5))
+plt.xlabel('number of data points')
+plt.ylabel('average error')
+
+#plot legends
+plt.legend([
+    'operator error', 'frobenius error', 'eigenvalue error',
+    'eigenfunction error', 'slope -1', 'slope -0.5'
+])
+
+plt.title(
+    'log-log-plot of average error of operators vs number of observables')
 plt.show(block=True)
