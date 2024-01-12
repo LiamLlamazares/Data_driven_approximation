@@ -1,5 +1,5 @@
 
-# In this file we compute the error of the eigenvalues and eigenvectors of the operator matrix Kexact for different dictionary lengths
+# In this file we compute the error of the eigenvalues and eigenfunctions of the operator matrix Kexact for different dictionary lengths
 # We plot the errors as a function of the number of observables
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,21 +33,18 @@ Omega = domain.discretization(bounds, boxes)
 gamma = -0.8
 delta = -0.7
 
-
-
-#A loop that repeats the above, with fewer dictionary lengths the number we use is 100,1000,10000,100000,500000
-# generate data
-dictionarylengths= range(0,11+1)
-datapoints=1000
-datapointsexact=100000
-
 #This corresponds to the ODE dx1=gamma*x1dt, dx2=delta*(x2-x1^2)dt
 def b(x):
     return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
 
-eigenvalue_errors=[]
-eigenvector_errors=np.zeros((len(dictionarylengths)))
+dictionarylengths= range(0,11+1)
+datapoints=1000
+datapointsexact=100000
+
 operator_errors=np.zeros((len(dictionarylengths)))
+frobenius_operator_errors=np.zeros((len(dictionarylengths)))
+eigenvalue_errors=np.zeros((len(dictionarylengths)))
+eigenfunction_errors=np.zeros((len(dictionarylengths)))
 number_of_observables=np.zeros((len(dictionarylengths)))
 operator_norms_K_exact=np.zeros((len(dictionarylengths)))
 
@@ -59,10 +56,11 @@ for i in dictionarylengths:
     X=Omega.rand(datapoints)
     psi = observables.monomials(i)
     number_of_observables[i]=psi.length(X)
-    eigenvalue_error,eigenvector_error,operator_error, operator_norm_K_exact=gedmd_helper.gedmdErrors(Xexact, X, psi, b, Omega=Omega)
-    eigenvalue_errors.append(eigenvalue_error)
-    eigenvector_errors[i]=eigenvector_error
+    operator_error, frobenius_operator_error, eigenvalue_error,eigenfunction_error, operator_norm_K_exact=gedmd_helper.gedmdErrors(Xexact, X, psi, b, Omega=Omega)
     operator_errors[i]=operator_error
+    frobenius_operator_errors[i]=frobenius_operator_error
+    eigenvalue_errors[i]=eigenvalue_error
+    eigenfunction_errors[i]=eigenfunction_error
     operator_norms_K_exact[i]=operator_norm_K_exact
     
 
@@ -79,8 +77,8 @@ plt.xlabel('number of observables')
 plt.ylabel('operator norm of Kexact')
 plt.figure()
 
-# log log plot the norm of the eigenvectors vs the number of dictionary lengths
-plt.loglog(number_of_observables[5:11],eigenvector_errors[5:11])
+# log log plot the norm of the eigenfunctions vs the number of dictionary lengths
+plt.loglog(number_of_observables[5:11],eigenfunction_errors[5:11])
 # log log plot the error of the operators vs the number of observables
 plt.loglog(number_of_observables[1:11],operator_errors[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
@@ -93,20 +91,22 @@ plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],0.5)
 plt.xlabel('number of observables')
 
 #plot legends
-plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 1','slope 0.5'])
+plt.legend(['norm of eigenfunctions','error of operators','error of eigenvalues','slope 1','slope 0.5'])
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
 
 
 
 M=10
-eigenvector_errors=np.zeros((len(dictionarylengths),M))
+eigenfunction_errors=np.zeros((len(dictionarylengths),M))
 evdistanceslists=[]
 eigenvalue_errors=np.zeros((len(dictionarylengths),M))
 operator_errors=np.zeros((len(dictionarylengths),M))
-eigenvector_errors_average=np.zeros((len(dictionarylengths)))
+frobenius_errors=np.zeros((len(dictionarylengths),M))
 operator_errors_average=np.zeros((len(dictionarylengths)))
+frobenius_errors_average=np.zeros((len(dictionarylengths)))
 eigenvalues_error_average=np.zeros((len(dictionarylengths)))
+eigenfunction_errors_average=np.zeros((len(dictionarylengths)))
 
 #We repeat the above for M runs
 for i in dictionarylengths:
@@ -118,28 +118,31 @@ for i in dictionarylengths:
         Y=b(X)
         psi = observables.monomials(i)
         evs = psi.length(X)
-        operator_error,eigenvalue_error,eigenvector_error, operator_norm_K_exact=gedmd_helper.gedmdErrors(Xexact, X, psi, b, Omega=Omega)
+        operator_error, frobenius_error, eigenvalue_error,eigenfunction_error, operator_norm_K_exact=gedmd_helper.gedmdErrors(Xexact, X, psi, b, Omega=Omega)
         operator_errors[i,m]=operator_error
+        frobenius_errors[i,m]=frobenius_error
         eigenvalue_errors[i,m]=eigenvalue_error
-        eigenvector_errors[i,m]=eigenvector_error
+        eigenfunction_errors[i,m]=eigenfunction_error
         
-    eigenvector_errors_average[i]=np.average(eigenvector_errors[i,:])
+        
     operator_errors_average[i]=np.average(operator_errors[i,:])
+    frobenius_errors_average[i]=np.average(frobenius_errors[i,:])
     eigenvalues_error_average[i]=np.average(eigenvalue_errors[i,:])
-        
+    eigenfunction_errors_average[i]=np.average(eigenfunction_errors[i,:])      
 
         
 
-#error
+#error plots
 plt.figure()
-plt.loglog(number_of_observables[5:11],eigenvector_errors_average[5:11])
 plt.loglog(number_of_observables[1:11],operator_errors_average[1:11])
+plt.loglog(number_of_observables[1:11],frobenius_errors_average[1:11]) #In this case the frobenius error is almost the same as the operator error
 plt.loglog(number_of_observables[1:11],eigenvalues_error_average[1:11])
+plt.loglog(number_of_observables[5:11],eigenfunction_errors_average[5:11])
 
 #slope
 plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],1)*operator_errors_average[1]/np.power(number_of_observables[1],1))
 plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],0.5)*operator_errors_average[1]/np.power(number_of_observables[1],0.5))
 
-plt.legend(['average error of eigenvectors','average error of operators',"average error of eigenvalues",'slope 1','slope 0.5'])
+plt.legend(['average operator error', 'average frobenius error', "average error of eigenvalues",'average error of eigenfunctions','slope 1','slope 0.5'])
 plt.xlabel('number of observables')
 plt.show(block=True)

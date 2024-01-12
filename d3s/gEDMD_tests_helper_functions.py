@@ -28,16 +28,28 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
 
     Returns:
     operator_error_rescaled (float): The rescaled operator error between the exact and approximate system.
+    frobenius_error_rescaled (float): The Frobenius norm between the exact and approximate system.
     eigenvalue_error_rescaled (float): The rescaled eigenvalue error between the exact and approximate system.
     eigenfunction_error (float): The error between the eigenfunctions of the exact and approximate system.
+    operator_norm_K_exact (float): The operator norm of the exact system.
 
     Example:
     ```python
-    import numpy as np
-    import d3s.algorithms as algorithms
-    import d3s.domain as domain
-    import d3s.observables as observables
-    import d3s.gEDMD_tests_helper_functions as gedmd_helper
+    bounds = np.array([[-1, 1], [-1, 1]])
+    boxes = np.array([50, 50])
+    Omega = domain.discretization(bounds, boxes)
+    # define system
+    gamma = -0.8
+    delta = -0.7
+
+    #This corresponds to the ODE dx1=gamma*x1dt, dx2=delta*(x2-x1^2)dt
+    def b(x):
+        return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
+    
+    Xexact = Omega.rand(1000000) 
+    X=Omega.rand(10000)
+    psi = observables.monomials(i)
+    operator_error, frobenius_operator_error, eigenvalue_error,eigenfunction_error, operator_norm_K_exact=gedmd_helper.gedmdErrors(Xexact, X, psi, b, Omega=Omega)
 
     ```
     """
@@ -53,6 +65,9 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
     ue,se,vhe=np.linalg.svd(Kexact-K)
     operator_norm_K_exact=s[0]
     operator_error_rescaled=se[0]/operator_norm_K_exact
+    
+    #Frobeinus norm error
+    frobenius_error_rescaled=np.linalg.norm(Kexact-K)/operator_norm_K_exact
     
     #Eigenvalue error
     eigenvalues_K_exact=np.sort(np.linalg.eigvals(Kexact))
@@ -79,4 +94,14 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
     eigenfunction_error_no_duplicates.sort()
     eigenfunction_error = np.linalg.norm(eigenfunction_error_no_duplicates[:evs])
     
-    return operator_error_rescaled, eigenvalue_error_rescaled, eigenfunction_error, operator_norm_K_exact
+    return operator_error_rescaled, frobenius_error_rescaled, eigenvalue_error_rescaled, eigenfunction_error, operator_norm_K_exact
+
+
+#In the notation we use in our new paper: 
+# C= <A psi,psi>, where A is the generator of the system
+# G = <psi,psi>, is the Gramm matrix
+# A =G^{-1} C^T is the operator matrix
+# In the notation in the old paper by Stefan et al:
+# K = operator matrix = A
+# C0 = gram matrix = G
+# C1 = stiffness matrix = C
