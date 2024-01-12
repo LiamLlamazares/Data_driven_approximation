@@ -85,15 +85,15 @@ plt.loglog(number_of_observables[5:11],eigenvector_errors[5:11])
 plt.loglog(number_of_observables[1:11],operator_errors[1:11])
 # log log plot of the error of the eigenvalues vs the number of observables
 plt.loglog(number_of_observables[1:11],eigenvalue_errors[1:11])
-# also plot a line with log log slope 2 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],2)*operator_errors[1]/np.power(number_of_observables[1],2))
-# also plot a line with log log slope 1.5 to see if the error of the operators is proportional to the number of observables to the power 1.5
-plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],1.5)*operator_errors[1]/np.power(number_of_observables[1],1.5))
+# also plot a line with log log slope 1 to see if the error of the operators is proportional to the number of observables squared
+plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],1)*operator_errors[1]/np.power(number_of_observables[1],1))
+# also plot a line with log log slope 0.5 to see if the error of the operators is proportional to the number of observables to the power 1.5
+plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],0.5)*operator_errors[1]/np.power(number_of_observables[1],0.5))
 
 plt.xlabel('number of observables')
 
 #plot legends
-plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 2','slope 1.5'])
+plt.legend(['norm of eigenvectors','error of operators','error of eigenvalues','slope 1','slope 0.5'])
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
 
@@ -130,19 +130,16 @@ for i in dictionarylengths:
 
         
 
-#plots
+#error
 plt.figure()
-# log log plot the average error of the eigenvectors vs the number of dictionary lengths
 plt.loglog(number_of_observables[5:11],eigenvector_errors_average[5:11])
-# log log plot the average error of the operators vs the number of observables
 plt.loglog(number_of_observables[1:11],operator_errors_average[1:11])
-# log log plot of the error of the eigenvalues vs the number of observables
 plt.loglog(number_of_observables[1:11],eigenvalues_error_average[1:11])
-# also plot a line with log log slope 1 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],2)*operator_errors_average[1]/np.power(number_of_observables[1],2))
-# also plot a line with log log slope 1,25 to see if the error of the operators is proportional to the number of observables squared
-plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],1.5)*operator_errors_average[1]/np.power(number_of_observables[1],1.5))
-# plot legends
-plt.legend(['error of eigenvectors','error of operators',"error of eigenvalues",'slope 2','slope 1.5'])
+
+#slope
+plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],1)*operator_errors_average[1]/np.power(number_of_observables[1],1))
+plt.loglog(number_of_observables[1:11],np.power(number_of_observables[1:11],0.5)*operator_errors_average[1]/np.power(number_of_observables[1],0.5))
+
+plt.legend(['average error of eigenvectors','average error of operators',"average error of eigenvalues",'slope 1','slope 0.5'])
 plt.xlabel('number of observables')
 plt.show(block=True)
