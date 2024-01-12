@@ -14,6 +14,7 @@ bounds = np.array([[-1, 1], [-1, 1]])
 boxes = np.array([50, 50])
 Omega = domain.discretization(bounds, boxes)
 
+
 def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
     """
     Calculate the operator error, eigenvalue error, and eigenfunction error between an exact system and an approximate system.
@@ -53,51 +54,63 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
 
     ```
     """
-    evs= psi.length(X)
+    evs = psi.length(X)
     Yexact = b(X_exact)
     Y = b(X)
-    Kexact, dexact, V_exact = algorithms.gedmd(X_exact, Yexact, None, psi, evs=evs, operator='K')
+    Kexact, dexact, V_exact = algorithms.gedmd(X_exact,
+                                               Yexact,
+                                               None,
+                                               psi,
+                                               evs=evs,
+                                               operator='K')
 
     K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
-    
+
     #Operator norm error
-    u,s,vh=np.linalg.svd(Kexact)
-    ue,se,vhe=np.linalg.svd(Kexact-K)
-    operator_norm_K_exact=s[0]
-    operator_error_rescaled=se[0]/operator_norm_K_exact
-    
+    u, s, vh = np.linalg.svd(Kexact)
+    ue, se, vhe = np.linalg.svd(Kexact - K)
+    operator_norm_K_exact = s[0]
+    operator_error_rescaled = se[0] / operator_norm_K_exact
+
     #Frobeinus norm error
-    frobenius_error_rescaled=np.linalg.norm(Kexact-K)/operator_norm_K_exact
-    
+    frobenius_error_rescaled = np.linalg.norm(Kexact -
+                                              K) / operator_norm_K_exact
+
     #Eigenvalue error
-    eigenvalues_K_exact=np.sort(np.linalg.eigvals(Kexact))
-    eigenvalues_K=np.sort(np.linalg.eigvals(K))
-    eigenvalue_error_rescaled=np.linalg.norm(eigenvalues_K_exact-eigenvalues_K)/operator_norm_K_exact
-    
+    eigenvalues_K_exact = np.sort(np.linalg.eigvals(Kexact))
+    eigenvalues_K = np.sort(np.linalg.eigvals(K))
+    eigenvalue_error_rescaled = np.linalg.norm(
+        eigenvalues_K_exact - eigenvalues_K) / operator_norm_K_exact
+
     #Eigenfunction error
-    V_normalized_exact=np.zeros((V_exact.shape[0],V_exact.shape[1]))
-    V_normalized=np.zeros((V_exact.shape[0],V_exact.shape[1]))
+    V_normalized_exact = np.zeros((V_exact.shape[0], V_exact.shape[1]))
+    V_normalized = np.zeros((V_exact.shape[0], V_exact.shape[1]))
     for l in range(V_exact.shape[1]):
-        V_normalized_exact[:,l]=V_exact[:,l]/np.linalg.norm(V_exact[:,l])
-        V_normalized[:,l]=V[:,l]/np.linalg.norm(V[:,l])
+        V_normalized_exact[:,
+                           l] = V_exact[:, l] / np.linalg.norm(V_exact[:, l])
+        V_normalized[:, l] = V[:, l] / np.linalg.norm(V[:, l])
     eigenfunction_error = []
     #Need to compare the 'same' eigenfunctions, sign included
     for j in range(evs):
         for k in range(evs):
-            eigenfunction_error.append(np.linalg.norm(V_normalized_exact[:,j]-V_normalized[:, k]))
-            eigenfunction_error.append(np.linalg.norm(V_normalized_exact[:,j]+V_normalized[:, k]))
+            eigenfunction_error.append(
+                np.linalg.norm(V_normalized_exact[:, j] - V_normalized[:, k]))
+            eigenfunction_error.append(
+                np.linalg.norm(V_normalized_exact[:, j] + V_normalized[:, k]))
     # Create a new list with duplicates removed, but keep all zeros
-    eigenfunction_error_no_duplicates = [0]*eigenfunction_error.count(0)
-    eigenfunction_error_no_duplicates += list(set([i for i in eigenfunction_error if i != 0]))
+    eigenfunction_error_no_duplicates = [0] * eigenfunction_error.count(0)
+    eigenfunction_error_no_duplicates += list(
+        set([i for i in eigenfunction_error if i != 0]))
 
     # Sort the list
     eigenfunction_error_no_duplicates.sort()
-    eigenfunction_error = np.linalg.norm(eigenfunction_error_no_duplicates[:evs])
-    
+    eigenfunction_error = np.linalg.norm(
+        eigenfunction_error_no_duplicates[:evs])
+
     return operator_error_rescaled, frobenius_error_rescaled, eigenvalue_error_rescaled, eigenfunction_error, operator_norm_K_exact
 
 
-#In the notation we use in our new paper: 
+#In the notation we use in our new paper:
 # C= <A psi,psi>, where A is the generator of the system
 # G = <psi,psi>, is the Gramm matrix
 # A =G^{-1} C^T is the operator matrix
