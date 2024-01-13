@@ -43,24 +43,21 @@ data_points_number = [psi.length(Xexact) * 2**x for x in range(0, 15)]
 operator_errors = np.zeros((len(data_points_number)))
 frobenius_errors = np.zeros((len(data_points_number)))
 eigenvalue_errors = np.zeros((len(data_points_number)))
-eigenfunction_errors = np.zeros((len(data_points_number)))
 operator_norms_K_exact = np.zeros((len(data_points_number)))
 
 for i in range(len(data_points_number)):
     # generate data
     X = Omega.rand(data_points_number[i])
-    operator_error, frobenius_error, eigenvalue_error, eigenfunction_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
+    operator_error, frobenius_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
         Xexact, X, psi, b, Omega=Omega)
     operator_errors[i] = operator_error
     frobenius_errors[i] = frobenius_error
     eigenvalue_errors[i] = eigenvalue_error
-    eigenfunction_errors[i] = eigenfunction_error
     operator_norms_K_exact[i] = operator_norm_K_exact
 
 plt.loglog(data_points_number, operator_errors)
 plt.loglog(data_points_number, frobenius_errors)
 plt.loglog(data_points_number, eigenvalue_errors)
-plt.loglog(data_points_number, eigenfunction_errors)
 
 #slopes
 plt.loglog(
@@ -75,8 +72,8 @@ plt.xlabel('number of data points')
 
 #plot legends
 plt.legend([
-    'operator error', 'frobenius error', 'eigenvalue error',
-    'eigenfunction error', 'slope -1', 'slope -0.5'
+    'operator error', 'frobenius error', 'eigenvalue error', 'slope -1',
+    'slope -0.5'
 ])
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
@@ -86,11 +83,9 @@ M = 10
 operator_errors = np.zeros((len(data_points_number), M))
 frobenius_errors = np.zeros((len(data_points_number), M))
 eigenvalue_errors = np.zeros((len(data_points_number), M))
-eigenfunction_errors = np.zeros((len(data_points_number), M))
 operator_errors_average = np.zeros((len(data_points_number)))
 frobenius_errors_average = np.zeros((len(data_points_number)))
 eigenvalues_error_average = np.zeros((len(data_points_number)))
-eigenfunction_errors_average = np.zeros((len(data_points_number)))
 
 for m in range(M):
     for i in range(len(data_points_number)):
@@ -99,24 +94,20 @@ for m in range(M):
         Yexact = b(Xexact)
         X = Omega.rand(data_points_number[i])
         Y = b(X)
-        operator_error, frobenius_error, eigenvalue_error, eigenfunction_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
+        operator_error, frobenius_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
             Xexact, X, psi, b, Omega=Omega)
         operator_errors[i, m] = operator_error
         frobenius_errors[i, m] = frobenius_error
-        eigenvalue_errors[i, m] = eigenvalue_error
-        eigenfunction_errors[i, m] = eigenfunction_error
 
     operator_errors_average = np.average(operator_errors, axis=1)
     frobenius_errors_average = np.average(frobenius_errors, axis=1)
     eigenvalues_error_average = np.average(eigenvalue_errors, axis=1)
-    eigenfunction_errors_average = np.average(eigenfunction_errors, axis=1)
 
 #error plots
 plt.figure()
 plt.loglog(data_points_number, operator_errors_average)
 plt.loglog(data_points_number, frobenius_errors_average)
 plt.loglog(data_points_number, eigenvalues_error_average)
-plt.loglog(data_points_number, eigenfunction_errors_average)
 
 #slope
 plt.loglog(
@@ -132,8 +123,8 @@ plt.ylabel('average error')
 
 #plot legends
 plt.legend([
-    'operator error', 'frobenius error', 'eigenvalue error',
-    'eigenfunction error', 'slope -1', 'slope -0.5'
+    'operator error', 'frobenius error', 'eigenvalue error', 'slope -1',
+    'slope -0.5'
 ])
 
 plt.title(

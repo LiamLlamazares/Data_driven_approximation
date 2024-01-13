@@ -68,8 +68,11 @@ while operator_error > epsilon:
     observables_number_exact = 10 * observables_number
     X_exact = Omega.rand(observables_number_exact)
     X = Omega.rand(observables_number)
-    operator_error, _, _, _, norm_K_exact = gedmd_helper.gedmdErrors(
-        X_exact, X, psi, b, Omega=Omega)
+    operator_error, _, _, norm_K_exact = gedmd_helper.gedmdErrors(X_exact,
+                                                                  X,
+                                                                  psi,
+                                                                  b,
+                                                                  Omega=Omega)
     operator_errors.append(operator_error)
     print("error is " + str(operator_error) + " for " +
           str(observables_number) + " data points")
