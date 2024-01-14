@@ -61,7 +61,6 @@ observables_number = int((N + 1) * (N + 2) / 2)
 #Loop to find the number of data points needed to get an error smaller than epsilon
 operator_errors = []
 observables_number_list = []
-predicted = []
 operator_error = epsilon + 1
 
 while operator_error > epsilon:
@@ -82,7 +81,6 @@ while operator_error > epsilon:
 
 plt.figure()
 plt.loglog(observables_number_list, operator_errors)
-plt.loglog(observables_number_list, predicted)
 plt.loglog(
     observables_number_list,
     np.power(observables_number_list, -1 / 2) * operator_errors[0] /

@@ -54,7 +54,7 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
 
     ```
     """
-    evs = psi.length(X)
+    evs = psi.length()
     Yexact = b(X_exact)
     Y = b(X)
     Kexact, dexact, V_exact = algorithms.gedmd(X_exact,

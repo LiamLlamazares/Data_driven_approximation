@@ -5,7 +5,6 @@ import scipy.sparse.linalg
 
 import d3s.observables as _observables
 import d3s.kernels as _kernels
-
 '''
 The implementations of the methods 
  
@@ -32,12 +31,12 @@ def dmd(X, Y, mode='exact'):
     :return:     eigenvalues d and modes Phi
     '''
     U, s, Vt = _sp.linalg.svd(X, full_matrices=False)
-    S_inv = _sp.diag(1/s)
+    S_inv = _sp.diag(1 / s)
     A = U.T @ Y @ Vt.T @ S_inv
     d, W = sortEig(A, A.shape[0])
 
     if mode == 'exact':
-        Phi = Y @ Vt.T @ S_inv @ W @ _sp.diag(1/d)
+        Phi = Y @ Vt.T @ S_inv @ W @ _sp.diag(1 / d)
     elif mode == 'standard':
         Phi = U @ W
     else:
@@ -55,14 +54,15 @@ def dmdc(X, Y, U, svThresh=1e-10):
     :param svThresh: Threshold below which to discard singular values
     :return: A_approx, B_approx, Phi  (where Phi are dynamic modes of A)
     '''
-    n = X.shape[0] # size of state vector
-    q = U.shape[0] # size of control vector
+    n = X.shape[0]  # size of state vector
+    q = U.shape[0]  # size of control vector
 
     # Y = G * Gamma
     Omega = scipy.vstack((X, U))
     U, svs, V = scipy.linalg.svd(Omega)
     V = V.T
-    svs_to_keep = svs[scipy.where(svs > svThresh)] # todo: ensure exist svs that are greater than thresh
+    svs_to_keep = svs[scipy.where(
+        svs > svThresh)]  # todo: ensure exist svs that are greater than thresh
     n_svs = len(svs_to_keep)
     Sigma_truncated = scipy.diag(svs_to_keep)
     U_truncated = U[:, :n_svs]
@@ -80,15 +80,18 @@ def dmdc(X, Y, U, svThresh=1e-10):
     UA = U_truncated[:n, :]
     UB = U_truncated[n:, :]
 
-    A_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated
-    B_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UB.T
+    A_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(
+        Sigma_truncated) @ UA.T @ U2_truncated
+    B_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(
+        Sigma_truncated) @ UB.T
 
     # eigendecomposition of A_approx
     w, _ = scipy.linalg.eig(A_approx)
     W = scipy.diag(w)
 
     # compute dynamic modes of A
-    Phi = Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated @ W
+    Phi = Y @ V_truncated @ scipy.linalg.inv(
+        Sigma_truncated) @ UA.T @ U2_truncated @ W
 
     return A_approx, B_approx, Phi
 
@@ -100,7 +103,7 @@ def amuse(X, Y, evs=5):
     :return:    eigenvalues d and corresponding eigenvectors Phi containing the coefficients for the eigenfunctions
     '''
     U, s, _ = _sp.linalg.svd(X, full_matrices=False)
-    S_inv = _sp.diag(1/s)
+    S_inv = _sp.diag(1 / s)
     Xp = S_inv @ U.T @ X
     Yp = S_inv @ U.T @ Y
     K = Xp @ Yp.T
@@ -136,8 +139,8 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
 
     TODO: Switch to sparse matrices.
     '''
-    m = X.shape[1] # number of test points
-    n = Omega.numBoxes() # number of boxes
+    m = X.shape[1]  # number of test points
+    n = Omega.numBoxes()  # number of boxes
     A = _sp.zeros([n, n])
     # compute transitions
     for i in range(m):
@@ -184,21 +187,21 @@ def gedmd(X, Y, Z, psi, evs=5, operator='K'):
     '''
     PsiX = psi(X)
     dPsiY = _np.einsum('ijk,jk->ik', psi.diff(X), Y)
-    if not (Z is None): # stochastic dynamical system
-        n = PsiX.shape[0] # number of basis functions
-        ddPsiX = psi.ddiff(X) # second-order derivatives
-        S = _np.einsum('ijk,ljk->ilk', Z, Z) # sigma \cdot sigma^T
+    if not (Z is None):  # stochastic dynamical system
+        n = PsiX.shape[0]  # number of basis functions
+        ddPsiX = psi.ddiff(X)  # second-order derivatives
+        S = _np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
         for i in range(n):
-            dPsiY[i, :] += 0.5*_np.sum( ddPsiX[i, :, :, :] * S, axis=(0,1) )
-    
+            dPsiY[i, :] += 0.5 * _np.sum(ddPsiX[i, :, :, :] * S, axis=(0, 1))
+
     C_0 = PsiX @ PsiX.T
     C_1 = PsiX @ dPsiY.T
     if operator == 'P': C_1 = C_1.T
 
     A = _sp.linalg.pinv(C_0) @ C_1
-    
+
     d, V = sortEig(A, evs, which='SM')
-    
+
     return (A, d, V)
 
 
@@ -213,7 +216,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     :param operator: 'K' for Koopman or 'P' for Perron-Frobenius (note that the default is P here)
     :return:         eigenvalues d and eigenfunctions evaluated in X
     '''
-    if isinstance(X, list): # e.g., for strings
+    if isinstance(X, list):  # e.g., for strings
         n = len(X)
     else:
         n = X.shape[1]
@@ -222,7 +225,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     G_1 = _kernels.gramian2(X, Y, k)
     if operator == 'K': G_1 = G_1.T
 
-    A = _sp.linalg.pinv(G_0 + epsilon*_np.eye(n), rcond=1e-15) @ G_1
+    A = _sp.linalg.pinv(G_0 + epsilon * _np.eye(n), rcond=1e-15) @ G_1
     d, V = sortEig(A, evs)
     if operator == 'K': V = G_0 @ V
     return (d, V)
@@ -238,13 +241,14 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
     :return:           coefficient matrix Xi
     '''
     PsiX = psi(X)
-    Xi = Y @ _sp.linalg.pinv(PsiX) # least-squares initial guess
+    Xi = Y @ _sp.linalg.pinv(PsiX)  # least-squares initial guess
 
     for k in range(iterations):
-        s = abs(Xi) < eps # find coefficients less than eps ...
-        Xi[s] = 0         # ... and set them to zero
+        s = abs(Xi) < eps  # find coefficients less than eps ...
+        Xi[s] = 0  # ... and set them to zero
         for ind in range(X.shape[0]):
-            b = ~s[ind, :] # consider only functions corresponding to coefficients greater than eps
+            b = ~s[
+                ind, :]  # consider only functions corresponding to coefficients greater than eps
             Xi[ind, b] = Y[ind, :] @ _sp.linalg.pinv(PsiX[b, :])
     return Xi
 
@@ -258,12 +262,12 @@ def kpca(X, k, evs=5):
     :param evs:  number of eigenvalues/eigenvectors
     :return:     data X projected onto principal components
     '''
-    G = _kernels.gramian(X, k) # Gram matrix
-    
+    G = _kernels.gramian(X, k)  # Gram matrix
+
     # center Gram matrix
     n = X.shape[1]
-    N = _np.eye(n) - 1/n*_sp.ones((n, n))
-    G = N @ G @ N    
+    N = _np.eye(n) - 1 / n * _sp.ones((n, n))
+    G = N @ G @ N
     d, V = sortEig(G, evs)
     return (d, V)
 
@@ -281,17 +285,17 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
     '''
     G_0 = _kernels.gramian(X, k)
     G_1 = _kernels.gramian(Y, k)
-    
+
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
-    N = I - 1/n*_sp.ones((n, n))
+    N = I - 1 / n * _sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
-    
+
     A = _sp.linalg.solve(G_0 + epsilon*I, G_0, assume_a='sym') \
       @ _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')
-    
+
     d, V = sortEig(A, evs)
     return (d, V)
 
@@ -308,23 +312,25 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     '''
     G_0 = X.T @ X
     G_1 = Y.T @ Y
-    
+
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
-    N = I - 1/n*_sp.ones((n, n))
+    N = I - 1 / n * _sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
-    
-    A = _sp.linalg.solve(G_0 + epsilon*I, _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
-    
+
+    A = _sp.linalg.solve(
+        G_0 + epsilon * I,
+        _sp.linalg.solve(G_1 + epsilon * I, G_1, assume_a='sym')) @ G_0
+
     d, V = sortEig(A, evs)
-    rho = _sp.sqrt(d);
-    W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _sp.diag(rho)
-    
+    rho = _sp.sqrt(d)
+    W = _sp.linalg.solve(G_1 + epsilon * I, G_0) @ V @ _sp.diag(rho)
+
     Xi = X @ V
     Eta = Y @ W
-    
+
     return (rho, Xi, Eta)
 
 
@@ -345,44 +351,44 @@ def seba(V, R0=None, maxIter=5000):
     TODO: perturb near-constant vectors?
     '''
     n, r = V.shape
-    
+
     V, _ = _sp.linalg.qr(V, mode='economic')
-    mu = 0.99/_sp.sqrt(n)
-    
+    mu = 0.99 / _sp.sqrt(n)
+
     if R0 == None:
         R0 = _np.eye(r)
     else:
         R0, _ = _sp.linalg.polar(R0)
-    
+
     S = _sp.zeros((n, r))
-    
+
     for i in range(maxIter):
         Z = V @ R0.T
-        
+
         # threshold
         for j in range(r):
             S[:, j] = _sp.sign(Z[:, j]) * _sp.maximum(abs(Z[:, j]) - mu, 0)
-            S[:, j] = S[:, j]/_sp.linalg.norm(S[:, j])
-        
+            S[:, j] = S[:, j] / _sp.linalg.norm(S[:, j])
+
         # polar decomposition
         R1, _ = _sp.linalg.polar(S.T @ V)
-        
+
         # check whether converged
         if _sp.linalg.norm(R1 - R0) < 1e-14:
             break
-        
+
         # overwrite initial matrix with new matrix
         R0 = R1.copy()
-    
+
     # choose correct parity and normalize
     for j in range(r):
         S[:, j] = S[:, j] * _sp.sign(S[:, j].sum())
         S[:, j] = S[:, j] / _sp.amax(S[:, j])
-    
+
     # sort vectors
     ind = _sp.argsort(_np.min(S, axis=0))[::-1]
     S = S[:, ind]
-        
+
     return S
 
 
@@ -395,22 +401,23 @@ def kmeans(x, k, maxIter=100):
     :param maxIter: maximum number of iterations
     :return: cluster numbers for all data points
     '''
+
     def update(l0):
         c = _np.zeros((d, k))
         for i in range(k):
-            c[:, i] = _np.mean(x[:, l0==i], axis=1)
+            c[:, i] = _np.mean(x[:, l0 == i], axis=1)
         D = _sp.spatial.distance.cdist(x.T, c.T)
         l1 = D.argmin(axis=1)
         return l1
-    
-    d, m = x.shape # number of dimensions and data points
-    l0 = _np.random.randint(0, k, size=m) # initial cluster assignments
-    
+
+    d, m = x.shape  # number of dimensions and data points
+    l0 = _np.random.randint(0, k, size=m)  # initial cluster assignments
+
     it = 0
     while it < maxIter:
         l1 = update(l0)
         it += 1
-      
+
         if (l1 == l0).all():
             print('k-means converged after %d iterations.' % it)
             return l1
@@ -432,7 +439,7 @@ def sortEig(A, evs=5, which='LM'):
         d, V = _sp.sparse.linalg.eigs(A, evs, which=which)
     else:
         d, V = _sp.linalg.eig(A)
-    ind = d.argsort()[::-1] # [::-1] reverses the list of indices
+    ind = d.argsort()[::-1]  # [::-1] reverses the list of indices
     return (d[ind], V[:, ind])
 
 
@@ -444,4 +451,4 @@ def dinv(D):
     d = _np.diag(D)
     if _np.any(d < eps):
         print('Warning: Ill-conditioned or singular matrix.')
-    return _np.diag(1/d)
+    return _np.diag(1 / d)
