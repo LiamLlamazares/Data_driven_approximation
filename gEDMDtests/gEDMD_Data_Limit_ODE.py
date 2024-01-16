@@ -54,7 +54,7 @@ data_points_number = [
 print('max data_points_number = ',
       min_number_of_data_points * 2**number_of_loops, 'number_of_loops = ',
       number_of_loops)
-number_of_runs = 2
+number_of_runs = 150
 
 operator_errors = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_runs))
@@ -78,9 +78,27 @@ for m in range(number_of_runs):
 
         operator_errors[i, :, m] = [operator_error_m, operator_error_g]
         print('i = ', i, 'data points=', data_points_number[i],
-              'loop number = ', m)
+              'run number = ', m)
 
 operator_errors_average = np.mean(operator_errors, axis=2)
+#calculate confidence intervals for the average error of the operators (95% confidence) for each number of data points
+#first we divide the error data into 10 batches
+number_of_batches = 10
+batch_size = int(np.floor(number_of_runs / number_of_batches))
+operator_errors_batches = np.zeros(
+    (number_of_loops, types_of_observables_number, number_of_batches))
+for i in range(number_of_batches):
+    operator_errors_batches[:, :, i] = np.mean(
+        operator_errors[:, :, i * batch_size:(i + 1) * batch_size], axis=2)
+#now we calculate the average and standard deviation of each batch
+operator_errors_average = np.mean(operator_errors_batches, axis=2)
+operator_errors_std = np.std(operator_errors_batches, axis=2)
+#the batch averages can be interpreted as being Gaussian for large number of runs
+#so we can calculate the confidence intervals using student's t-distribution
+#we define the t_value for 95% confidence and 9 degrees of freedom
+t_value = 2.262
+operator_errors_confidence_interval = t_value * operator_errors_std / np.sqrt(
+    number_of_batches)
 
 #error plots
 plt.figure()
@@ -106,4 +124,5 @@ plt.legend([
     'slope -0.5'
 ])
 plt.title('log-log-plot of error of operators vs number of observables')
-plt.show(block=True)
+plt.show()
+1 - 1
