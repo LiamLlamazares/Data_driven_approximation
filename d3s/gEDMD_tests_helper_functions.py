@@ -12,7 +12,7 @@ import d3s.domain as domain
 import d3s.observables as observables
 
 
-def gedmdMatrix(X, psi, b, Omega):
+def gedmdMatrices(X, psi, b, Omega):
     """
     Calculates the gEDMD matrix for the ODE dX=b(X)dt.
 
@@ -25,6 +25,8 @@ def gedmdMatrix(X, psi, b, Omega):
 
     Returns:
     A (numpy.ndarray): The gEDMD matrix.
+    G (numpy.ndarray): The Gramm matrix.
+    C (numpy.ndarray): The stiffness matrix.
 
     Example:
     ```python
@@ -53,7 +55,7 @@ def gedmdMatrix(X, psi, b, Omega):
     C = PsiX @ dPsiY.T
 
     A = sp.linalg.pinv(G) @ C
-    return A
+    return A, G, C
 
 
 def gedmdErrors(X_exact, X, psi, b, Omega):
@@ -96,25 +98,19 @@ def gedmdErrors(X_exact, X, psi, b, Omega):
     ```
     """
     #Calculate the operator matrix
-    A = gedmdMatrix(X, psi, b, Omega)
-    A_exact = gedmdMatrix(X_exact, psi, b, Omega)
+    A, _, _ = gedmdMatrices(X, psi, b, Omega)
+    A_exact, G_exact, C_exact = gedmdMatrices(X_exact, psi, b, Omega)
 
-    #Operator norm error
-    operator_norm_K_exact = sp.linalg.norm(A_exact, 2)
+    #Operator norms
+    operator_norm_A_exact = sp.linalg.norm(A_exact, 2)
+    operator_norm_G_exact = sp.linalg.norm(G_exact, 2)
+    operator_norm_C_exact = sp.linalg.norm(C_exact, 2)
+
+    #Operator error
     operator_norm_error = sp.linalg.norm(A - A_exact, 2)
-    operator_error_rescaled = operator_norm_error / operator_norm_K_exact
+    operator_error_rescaled = operator_norm_error / operator_norm_A_exact
 
-    #Frobeinus norm error
-    frobenius_error_rescaled = np.linalg.norm(A_exact -
-                                              A) / operator_norm_K_exact
-
-    #Eigenvalue error
-    eigenvalues_K_exact = np.sort(np.linalg.eigvals(A_exact))
-    eigenvalues_K = np.sort(np.linalg.eigvals(A))
-    eigenvalue_error_rescaled = np.linalg.norm(
-        eigenvalues_K_exact - eigenvalues_K) / operator_norm_K_exact
-
-    return operator_error_rescaled, frobenius_error_rescaled, eigenvalue_error_rescaled, operator_norm_K_exact
+    return operator_error_rescaled, operator_norm_A_exact, operator_norm_G_exact, operator_norm_C_exact
 
 
 #In the notation we use in our new paper:

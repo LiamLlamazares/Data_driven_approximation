@@ -53,15 +53,7 @@ number_of_runs = 2
 
 operator_errors = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_runs))
-frobenius_errors = np.zeros(
-    (number_of_loops, types_of_observables_number, number_of_runs))
-eigenvalue_errors = np.zeros(
-    (number_of_loops, types_of_observables_number, number_of_runs))
 operator_errors_average = np.zeros(
-    (number_of_loops, types_of_observables_number))
-frobenius_errors_average = np.zeros(
-    (number_of_loops, types_of_observables_number))
-eigenvalues_error_average = np.zeros(
     (number_of_loops, types_of_observables_number))
 
 for m in range(number_of_runs):
@@ -69,17 +61,14 @@ for m in range(number_of_runs):
         # generate data
         Xexact = Omega.rand(M)
         X = Omega.rand(data_points_number[i])
-        operator_error_m, frobenius_error_m, _, _ = gedmd_helper.gedmdErrors(
+        operator_error_m, A_norm_m, G_norm_m, C_norm_m = gedmd_helper.gedmdErrors(
             Xexact, X, psi_m, b, Omega=Omega)
-        operator_error_g, frobenius_error_g, _, _ = gedmd_helper.gedmdErrors(
+        operator_error_g, A_norm_g, G_norm_g, C_norm_g = gedmd_helper.gedmdErrors(
             Xexact, X, psi_g, b, Omega=Omega)
         operator_errors[i, :, m] = [operator_error_m, operator_error_g]
-        frobenius_errors[i, :, m] = [frobenius_error_m, frobenius_error_g]
         print('i = ', i, 'm = ', m)
 
 operator_errors_average = np.mean(operator_errors, axis=2)
-frobenius_errors_average = np.mean(frobenius_errors, axis=2)
-eigenvalues_error_average = np.mean(eigenvalue_errors, axis=2)
 
 #error plots
 plt.figure()
@@ -101,10 +90,7 @@ plt.xlabel('number of data points')
 
 #plot legends
 plt.legend([
-    'Gaussian operator error',
-    'Monomial operator error',
-    # 'Gaussian Frobenius error', 'Monomial Frobenius error',
-    'slope -1',
+    'Gaussian operator error', 'Monomial operator error', 'slope -1',
     'slope -0.5'
 ])
 plt.title('log-log-plot of error of operators vs number of observables')
