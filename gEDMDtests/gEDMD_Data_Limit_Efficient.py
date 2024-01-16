@@ -62,14 +62,20 @@ operator_errors_average = np.zeros(
     (number_of_loops, types_of_observables_number))
 
 for m in range(number_of_runs):
+    X_exact = Omega.rand(M)
+    A_exact_m, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_m, b, Omega)
+    A_exact_g, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_g, b, Omega)
+    A_exact_m__operator_norm = np.linalg.norm(A_exact_m, ord=2)
+    A_exact_g__operator_norm = np.linalg.norm(A_exact_g, ord=2)
     for i in range(number_of_loops):
-        # generate data
-        Xexact = Omega.rand(M)
         X = Omega.rand(data_points_number[i])
-        operator_error_m, A_norm_m, G_norm_m, C_norm_m = gedmd_helper.gedmdErrors(
-            Xexact, X, psi_m, b, Omega=Omega)
-        operator_error_g, A_norm_g, G_norm_g, C_norm_g = gedmd_helper.gedmdErrors(
-            Xexact, X, psi_g, b, Omega=Omega)
+        A_m, _, _ = gedmd_helper.gedmdMatrices(X, psi_m, b, Omega)
+        A_g, _, _ = gedmd_helper.gedmdMatrices(X, psi_g, b, Omega)
+        operator_error_m = np.linalg.norm(A_exact_m - A_m,
+                                          ord=2) / A_exact_m__operator_norm
+        operator_error_g = np.linalg.norm(A_exact_g - A_g,
+                                          ord=2) / A_exact_g__operator_norm
+
         operator_errors[i, :, m] = [operator_error_m, operator_error_g]
         print('i = ', i, 'data points=', data_points_number[i],
               'loop number = ', m)
