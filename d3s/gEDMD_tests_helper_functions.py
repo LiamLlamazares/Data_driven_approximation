@@ -12,7 +12,7 @@ import d3s.domain as domain
 import d3s.observables as observables
 
 
-def gedmdMatrices(X, psi, b, Omega):
+def gedmdMatrices(X, psi, b, Omega, sigma=None):
     """
     Calculates the gEDMD matrix for the ODE dX=b(X)dt.
 
@@ -48,9 +48,17 @@ def gedmdMatrices(X, psi, b, Omega):
     ```
     """
     Y = b(X)
-
     PsiX = psi(X)
     dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
+
+    if not (sigma is None):  # stochastic dynamical system
+        Z = sigma(X)
+        n = PsiX.shape[0]  # number of basis functions
+        ddPsiX = psi.ddiff(X)  # second-order derivatives
+        S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
+        for i in range(n):
+            dPsiY[i, :] += 0.5 * np.sum(ddPsiX[i, :, :, :] * S, axis=(0, 1))
+
     G = PsiX @ PsiX.T
     C = PsiX @ dPsiY.T
 

@@ -284,15 +284,8 @@ psi = observables.gaussians(Omega, 0.2)
 #Calculate the number of observables
 observables_number = psi.length()
 # apply generator EDMD
-evs = 300  # number of eigenvalues/eigenfunctions to be computed
+evs = 3  # number of eigenvalues/eigenfunctions to be computed
 K, d, V = algorithms.gedmd(X, Y, Z, psi, evs=evs, operator='P')
-import d3s.gEDMD_tests_helper_functions as gedmd_helper
-
-Xsmall = Omega.randPerBox(10)
-operator_error, frobenius_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
-    X, Xsmall, psi, b, Omega=Omega)
-printVector(np.real(d), 'd')
-
 # plot eigenfunctions
 c = Omega.midpointGrid()
 Psi_c = psi(c)
