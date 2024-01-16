@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 
 #Function to calculate operator error, eigenvalue error and eigenvector error, given
@@ -10,12 +11,52 @@ import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
 
-bounds = np.array([[-1, 1], [-1, 1]])
-boxes = np.array([50, 50])
-Omega = domain.discretization(bounds, boxes)
+
+def gedmdMatrix(X, psi, b, Omega):
+    """
+    Calculates the gEDMD matrix for the ODE dX=b(X)dt.
+
+    Parameters:
+    X (numpy.ndarray): Data points for the system.
+    psi (function): A collection of observables.
+    b (function): The drift function.
+    evs (int, optional): Number of eigenvalues/eigenfunctions to be computed. Defaults to 8.
+    Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
+
+    Returns:
+    A (numpy.ndarray): The gEDMD matrix.
+
+    Example:
+    ```python
+    bounds = np.array([[-1, 1], [-1, 1]])
+    boxes = np.array([50, 50])
+    Omega = domain.discretization(bounds, boxes)
+    # define system
+    gamma = -0.8
+    delta = -0.7
+
+    #This corresponds to the ODE dx1=gamma*x1dt, dx2=delta*(x2-x1^2)dt
+    def b(x):
+        return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
+    
+    X=Omega.rand(10000)
+    psi = observables.monomials(i)
+    A=gedmd_helper.gedmdMatrix(Xexact, X, psi, b, Omega=Omega)
+
+    ```
+    """
+    Y = b(X)
+
+    PsiX = psi(X)
+    dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
+    G = PsiX @ PsiX.T
+    C = PsiX @ dPsiY.T
+
+    A = sp.linalg.pinv(G) @ C
+    return A
 
 
-def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
+def gedmdErrors(X_exact, X, psi, b, Omega):
     """
     Calculate the operator error, eigenvalue error, and eigenfunction error between an exact system and an approximate system.
 
@@ -54,31 +95,23 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
 
     ```
     """
-    evs = psi.length()
-    Yexact = b(X_exact)
-    Y = b(X)
-    Kexact, dexact, V_exact = algorithms.gedmd(X_exact,
-                                               Yexact,
-                                               None,
-                                               psi,
-                                               evs=evs,
-                                               operator='K')
-
-    K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
+    #Calculate the operator matrix
+    A = gedmdMatrix(X, psi, b, Omega)
+    A_exact = gedmdMatrix(X_exact, psi, b, Omega)
 
     #Operator norm error
-    _, s, _ = np.linalg.svd(Kexact)
-    _, se, _ = np.linalg.svd(Kexact - K)
+    _, s, _ = np.linalg.svd(A_exact)
+    _, se, _ = np.linalg.svd(A_exact - A)
     operator_norm_K_exact = s[0]
     operator_error_rescaled = se[0] / operator_norm_K_exact
 
     #Frobeinus norm error
-    frobenius_error_rescaled = np.linalg.norm(Kexact -
-                                              K) / operator_norm_K_exact
+    frobenius_error_rescaled = np.linalg.norm(A_exact -
+                                              A) / operator_norm_K_exact
 
     #Eigenvalue error
-    eigenvalues_K_exact = np.sort(np.linalg.eigvals(Kexact))
-    eigenvalues_K = np.sort(np.linalg.eigvals(K))
+    eigenvalues_K_exact = np.sort(np.linalg.eigvals(A_exact))
+    eigenvalues_K = np.sort(np.linalg.eigvals(A))
     eigenvalue_error_rescaled = np.linalg.norm(
         eigenvalues_K_exact - eigenvalues_K) / operator_norm_K_exact
 
@@ -90,6 +123,6 @@ def gedmdErrors(X_exact, X, psi, b, Omega=Omega):
 # G = <psi,psi>, is the Gramm matrix
 # A =G^{-1} C^T is the operator matrix
 # In the notation in the old paper by Stefan et al:
-# K = operator matrix = A
+# A = operator matrix = A
 # C0 = gram matrix = G
 # C1 = stiffness matrix = C
