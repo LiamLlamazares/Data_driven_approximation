@@ -100,10 +100,9 @@ def gedmdErrors(X_exact, X, psi, b, Omega):
     A_exact = gedmdMatrix(X_exact, psi, b, Omega)
 
     #Operator norm error
-    _, s, _ = np.linalg.svd(A_exact)
-    _, se, _ = np.linalg.svd(A_exact - A)
-    operator_norm_K_exact = s[0]
-    operator_error_rescaled = se[0] / operator_norm_K_exact
+    operator_norm_K_exact = sp.linalg.norm(A_exact, 2)
+    operator_norm_error = sp.linalg.norm(A - A_exact, 2)
+    operator_error_rescaled = operator_norm_error / operator_norm_K_exact
 
     #Frobeinus norm error
     frobenius_error_rescaled = np.linalg.norm(A_exact -
