@@ -49,7 +49,7 @@ M = 100000
 
 number_of_loops = int(np.floor(np.log2(M / (2 * N))))
 data_points_number = [N * 2**x for x in range(0, number_of_loops)]
-number_of_runs = 2
+number_of_runs = 10
 
 operator_errors = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_runs))

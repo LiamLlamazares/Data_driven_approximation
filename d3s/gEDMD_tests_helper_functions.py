@@ -54,7 +54,9 @@ def gedmdMatrices(X, psi, b, Omega):
     G = PsiX @ PsiX.T
     C = PsiX @ dPsiY.T
 
-    A = sp.linalg.pinv(G) @ C
+    #A = sp.linalg.pinv(G) @ C.T
+    A = sp.linalg.solve(G, C.T)
+
     return A, G, C
 
 
