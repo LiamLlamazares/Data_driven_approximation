@@ -38,7 +38,8 @@ def b(x):
     return np.array([gamma * x[0, :], delta * (x[1, :] - x[0, :]**2)])
 
 
-dictionarylengths = range(0, 11 + 1)
+number_of_loops = 10
+dictionarylengths = range(0, number_of_loops)
 datapoints = 1000
 datapointsexact = 100000
 
@@ -52,8 +53,8 @@ for i in dictionarylengths:
     # generate data
     Xexact = Omega.rand(datapointsexact)
     X = Omega.rand(datapoints)
-    psi = observables.monomials(i)
-    number_of_observables[i] = psi.length(X)
+    psi = observables.monomials(i + 1)
+    number_of_observables[i] = psi.length()
     operator_error, frobenius_operator_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
         Xexact, X, psi, b, Omega=Omega)
     operator_errors[i] = operator_error
@@ -100,7 +101,7 @@ plt.legend(
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
 
-M = 10
+M = 150
 eigenvalue_errors = np.zeros((len(dictionarylengths), M))
 operator_errors = np.zeros((len(dictionarylengths), M))
 frobenius_errors = np.zeros((len(dictionarylengths), M))
@@ -116,8 +117,8 @@ for i in dictionarylengths:
         Yexact = b(Xexact)
         X = Omega.rand(datapoints)
         Y = b(X)
-        psi = observables.monomials(i)
-        evs = psi.length(X)
+        psi = observables.monomials(i + 1)
+        evs = psi.length()
         operator_error, frobenius_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
             Xexact, X, psi, b, Omega=Omega)
         operator_errors[i, m] = operator_error
@@ -127,6 +128,25 @@ for i in dictionarylengths:
     operator_errors_average[i] = np.average(operator_errors[i, :])
     frobenius_errors_average[i] = np.average(frobenius_errors[i, :])
     eigenvalues_error_average[i] = np.average(eigenvalue_errors[i, :])
+
+#calculate confidence intervals for the average error of the operators (95% confidence) for each number of dictionary elements
+#first we divide the error data into 3 batches
+number_of_batches = 10
+batch_size = int(np.floor(M / number_of_batches))
+operator_errors_batches = np.zeros((len(dictionarylengths), number_of_batches))
+for i in range(number_of_batches):
+    operator_errors_batches[:, i] = np.mean(
+        operator_errors[:, i * batch_size:(i + 1) * batch_size], axis=1)
+#now we calculate the average and standard deviation of each batch
+operator_errors_average = np.mean(operator_errors_batches, axis=1)
+operator_errors_std = np.std(operator_errors_batches, axis=1)
+#the batch averages can be interpreted as being Gaussian for large number of runs
+#so we can calculate the confidence intervals using student's t-distribution
+#we define the t_value for 95% confidence and 9 degrees of freedom
+t_value = 2.262
+
+operator_errors_confidence_interval = t_value * operator_errors_std / np.sqrt(
+    number_of_batches)
 
 #error plots
 plt.figure()
@@ -151,4 +171,5 @@ plt.legend([
     "average error of eigenvalues", 'slope 1', 'slope 0.5'
 ])
 plt.xlabel('number of observables')
-plt.show(block=True)
+plt.show()
+1 - 1
