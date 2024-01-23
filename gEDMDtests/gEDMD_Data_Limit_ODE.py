@@ -88,6 +88,11 @@ operator_errors_average = np.mean(operator_errors, axis=2)
 number_of_batches = 3
 batch_size = int(np.floor(number_of_runs /
                           number_of_batches))  #number of runs in each batch
+#GIves error if batch size is 0
+if batch_size == 0:
+    raise Exception(
+        'batch size is 0. Please increase number of runs or decrease number of batches'
+    )
 operator_errors_batches = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_batches))
 for i in range(number_of_batches):
