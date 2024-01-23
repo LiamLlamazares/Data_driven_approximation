@@ -4,6 +4,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 import sys
 import sys
 import os
@@ -46,6 +47,7 @@ min_number_of_data_points = 200
 
 # generate data
 M = 200000
+confidence_level = 0.95
 
 number_of_loops = int(np.floor(np.log2(M / min_number_of_data_points))) + 1
 data_points_number = [
@@ -54,7 +56,7 @@ data_points_number = [
 print('max data_points_number = ',
       min_number_of_data_points * 2**number_of_loops, 'number_of_loops = ',
       number_of_loops)
-number_of_runs = 150
+number_of_runs = 15
 
 operator_errors = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_runs))
@@ -82,9 +84,10 @@ for m in range(number_of_runs):
 
 operator_errors_average = np.mean(operator_errors, axis=2)
 #calculate confidence intervals for the average error of the operators (95% confidence) for each number of data points
-#first we divide the error data into 10 batches
-number_of_batches = 10
-batch_size = int(np.floor(number_of_runs / number_of_batches))
+#first we divide the error data into number_of_batches batches
+number_of_batches = 3
+batch_size = int(np.floor(number_of_runs /
+                          number_of_batches))  #number of runs in each batch
 operator_errors_batches = np.zeros(
     (number_of_loops, types_of_observables_number, number_of_batches))
 for i in range(number_of_batches):
@@ -92,20 +95,36 @@ for i in range(number_of_batches):
         operator_errors[:, :, i * batch_size:(i + 1) * batch_size], axis=2)
 #now we calculate the average and standard deviation of each batch
 operator_errors_average = np.mean(operator_errors_batches, axis=2)
-operator_errors_std = np.std(operator_errors_batches, axis=2)
+operator_errors_std = np.std(operator_errors_batches, axis=2, ddof=1)
 #the batch averages can be interpreted as being Gaussian for large number of runs
 #so we can calculate the confidence intervals using student's t-distribution
 #we define the t_value for 95% confidence and 9 degrees of freedom
-t_value = 2.262
+t_value = stats.t.ppf((1 + 0.95) / 2, number_of_batches - 1)
 operator_errors_confidence_interval = t_value * operator_errors_std / np.sqrt(
     number_of_batches)
 
 #error plots
+# ... rest of your code ...
+
+# error plots
 plt.figure()
 plt.loglog(data_points_number, operator_errors_average)
-#plt.loglog(data_points_number, frobenius_errors_average)
 
-#slopes
+# plot confidence intervals as shaded regions
+lower_bound = operator_errors_average - operator_errors_confidence_interval
+upper_bound = operator_errors_average + operator_errors_confidence_interval
+plt.fill_between(data_points_number,
+                 lower_bound[:, 0],
+                 upper_bound[:, 0],
+                 color='blue',
+                 alpha=0.2)
+plt.fill_between(data_points_number,
+                 lower_bound[:, 1],
+                 upper_bound[:, 1],
+                 color='orange',
+                 alpha=0.2)
+
+# slopes
 plt.loglog(
     data_points_number,
     np.power(np.float64(data_points_number), -1) *
@@ -118,11 +137,11 @@ plt.loglog(
     np.power(np.float64(data_points_number[0]), -0.5))
 plt.xlabel('number of data points')
 
-#plot legends
+# plot legends
 plt.legend([
     'Gaussian operator error', 'Monomial operator error', 'slope -1',
     'slope -0.5'
 ])
 plt.title('log-log-plot of error of operators vs number of observables')
-plt.show()
+plt.show(block=True)
 1 - 1
