@@ -40,7 +40,7 @@ def b(x):
 
 number_of_loops = 10
 dictionarylengths = range(0, number_of_loops)
-datapoints = 1000
+datapoints = 10000
 datapointsexact = 100000
 
 operator_errors = np.zeros((len(dictionarylengths)))
@@ -101,7 +101,7 @@ plt.legend(
 plt.title('log-log-plot of error of operators vs number of observables')
 plt.show()
 
-M = 150
+M = 50
 eigenvalue_errors = np.zeros((len(dictionarylengths), M))
 operator_errors = np.zeros((len(dictionarylengths), M))
 frobenius_errors = np.zeros((len(dictionarylengths), M))
@@ -112,6 +112,7 @@ eigenvalues_error_average = np.zeros((len(dictionarylengths)))
 #We repeat the above for M runs
 for i in dictionarylengths:
     for m in range(M):
+        print('dictionary length: ', i, 'run number: ', m)
         # generate data
         Xexact = Omega.rand(datapointsexact)
         Yexact = b(Xexact)
@@ -151,10 +152,6 @@ operator_errors_confidence_interval = t_value * operator_errors_std / np.sqrt(
 #error plots
 plt.figure()
 plt.loglog(number_of_observables[1:11], operator_errors_average[1:11])
-plt.loglog(
-    number_of_observables[1:11], frobenius_errors_average[1:11]
-)  #In this case the frobenius error is almost the same as the operator error
-plt.loglog(number_of_observables[1:11], eigenvalues_error_average[1:11])
 
 #slope
 plt.loglog(
