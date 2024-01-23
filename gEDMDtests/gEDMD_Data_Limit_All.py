@@ -21,8 +21,8 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 plt.ion()
 # Constants
 M = 20000
-number_of_runs = 20
-number_of_batches = 5
+number_of_runs = 100
+number_of_batches = 10
 confidence_level = 0.95
 number_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians']
