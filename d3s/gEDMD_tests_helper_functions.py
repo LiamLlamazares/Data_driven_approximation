@@ -61,11 +61,12 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None):
 
     G = PsiX @ PsiX.T
     C = PsiX @ dPsiY.T
+    T = dPsiY @ dPsiY.T
 
     #A = sp.linalg.pinv(G) @ C.T
     A = sp.linalg.solve(G, C.T)
 
-    return A, G, C
+    return A, G, C, T
 
 
 def gedmdErrors(X_exact, X, psi, b, Omega):

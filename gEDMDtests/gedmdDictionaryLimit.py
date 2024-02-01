@@ -48,12 +48,12 @@ eigenvalue_errors = np.zeros((len(dictionarylengths)))
 number_of_observables = np.zeros((len(dictionarylengths)))
 operator_norms_K_exact = np.zeros((len(dictionarylengths)))
 
+Xexact = Omega.rand(datapointsexact)
 for i in dictionarylengths:
     # generate data
-    Xexact = Omega.rand(datapointsexact)
     X = Omega.rand(datapoints)
     psi = observables.monomials(i)
-    number_of_observables[i] = psi.length(X)
+    number_of_observables[i] = psi.length()
     operator_error, frobenius_operator_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
         Xexact, X, psi, b, Omega=Omega)
     operator_errors[i] = operator_error
@@ -117,7 +117,7 @@ for i in dictionarylengths:
         X = Omega.rand(datapoints)
         Y = b(X)
         psi = observables.monomials(i)
-        evs = psi.length(X)
+        evs = psi.length()
         operator_error, frobenius_error, eigenvalue_error, operator_norm_K_exact = gedmd_helper.gedmdErrors(
             Xexact, X, psi, b, Omega=Omega)
         operator_errors[i, m] = operator_error
@@ -151,4 +151,5 @@ plt.legend([
     "average error of eigenvalues", 'slope 1', 'slope 0.5'
 ])
 plt.xlabel('number of observables')
-plt.show(block=True)
+plt.show()
+1 - 1

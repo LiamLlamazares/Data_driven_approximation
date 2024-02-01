@@ -63,14 +63,14 @@ operator_errors_average = np.zeros(
 
 for m in range(number_of_runs):
     X_exact = Omega.rand(M)
-    A_exact_m, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_m, b, Omega)
-    A_exact_g, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_g, b, Omega)
+    A_exact_m, _, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_m, b, Omega)
+    A_exact_g, _, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_g, b, Omega)
     A_exact_m__operator_norm = np.linalg.norm(A_exact_m, ord=2)
     A_exact_g__operator_norm = np.linalg.norm(A_exact_g, ord=2)
     for i in range(number_of_loops):
         X = Omega.rand(data_points_number[i])
-        A_m, _, _ = gedmd_helper.gedmdMatrices(X, psi_m, b, Omega)
-        A_g, _, _ = gedmd_helper.gedmdMatrices(X, psi_g, b, Omega)
+        A_m, _, _, _ = gedmd_helper.gedmdMatrices(X, psi_m, b, Omega)
+        A_g, _, _, _ = gedmd_helper.gedmdMatrices(X, psi_g, b, Omega)
         operator_error_m = np.linalg.norm(A_exact_m - A_m,
                                           ord=2) / A_exact_m__operator_norm
         operator_error_g = np.linalg.norm(A_exact_g - A_g,
@@ -81,6 +81,9 @@ for m in range(number_of_runs):
               'run number = ', m)
 
 operator_errors_average = np.mean(operator_errors, axis=2)
+#variance of operator errors for each number of data points
+operator_errors_variance = np.var(operator_errors, axis=2)
+
 #calculate confidence intervals for the average error of the operators (95% confidence) for each number of data points
 #first we divide the error data into 10 batches
 number_of_batches = 10

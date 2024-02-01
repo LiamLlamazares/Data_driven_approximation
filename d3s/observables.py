@@ -135,6 +135,7 @@ class monomials(object):
                     print(' x_%d^%d' % (j + 1, p[j]), end='')
 
     def length(self):
+        p = self.p
         '''
         Calculate the number of monomials for all data points in x.
         '''
