@@ -21,16 +21,17 @@ class discretization(object):
         Initializes box discretization object.
         '''
         assert bounds.shape[0] == boxes.size
-        self._bounds = bounds # lower and upper bounds for intervals
-        self._boxes = boxes # number of boxes per dimension
-        self._h = _np.divide(bounds[:, 1] - bounds[:, 0], boxes) # length of interval in each direction
-        self._d = boxes.size # number of dimensions
+        self._bounds = bounds  # lower and upper bounds for intervals
+        self._boxes = boxes  # number of boxes per dimension
+        self._h = _np.divide(bounds[:, 1] - bounds[:, 0],
+                             boxes)  # length of interval in each direction
+        self._d = boxes.size  # number of dimensions
 
     def __repr__(self):
         return 'Disretization of %s into %s boxes.' \
             % ('x'.join(['[%.2f, %.2f]' % (self._bounds[i, 0], self._bounds[i, 1]) for i in range(self._d)]),
                'x'.join(['%d' % (self._boxes[i]) for i in range(self._d)]))
-    
+
     def dimension(self):
         '''
         Returns dimension of the domain.
@@ -42,12 +43,12 @@ class discretization(object):
         Returns number of boxes.
         '''
         return self._boxes.prod()
-    
+
     def numVertices(self):
         '''
         Returns number of vertices of the grid.
         '''
-        return (self._boxes+1).prod()
+        return (self._boxes + 1).prod()
 
     def rand(self, n):
         '''
@@ -62,17 +63,19 @@ class discretization(object):
         '''
         Generates n random test points per box.
         '''
-        d = self._d # dimension of state space
-        nBoxes = self.numBoxes() # number of boxes
-        nTestPoints = n*nBoxes # number of all test points
+        d = self._d  # dimension of state space
+        nBoxes = self.numBoxes()  # number of boxes
+        nTestPoints = n * nBoxes  # number of all test points
 
-        x = _np.zeros([d, nTestPoints]) # for the test points
+        x = _np.zeros([d, nTestPoints])  # for the test points
         for i in range(nBoxes):
-             index = indexS2M(i, self._boxes) # corresponding multi-index
-             lb = self._bounds[:, 0] + _np.multiply(index,    self._h) # lower bounds for box
-             ub = self._bounds[:, 0] + _np.multiply(index +1, self._h) # upper bounds for box
-             for mu in range(d):
-                 x[mu, n*i:n*(i+1)] = randb(n, [lb[mu], ub[mu]])
+            index = indexS2M(i, self._boxes)  # corresponding multi-index
+            lb = self._bounds[:, 0] + _np.multiply(
+                index, self._h)  # lower bounds for box
+            ub = self._bounds[:, 0] + _np.multiply(
+                index + 1, self._h)  # upper bounds for box
+            for mu in range(d):
+                x[mu, n * i:n * (i + 1)] = randb(n, [lb[mu], ub[mu]])
         return x
 
     def index(self, x):
@@ -80,14 +83,14 @@ class discretization(object):
         Finds corresponding index of the box that contains vector x.
         '''
         mind = self.mindex(x)
-        if _np.any(mind == -1): return -1 # invalid index
+        if _np.any(mind == -1): return -1  # invalid index
         return indexM2S(mind, self._boxes)
 
     def mindex(self, x):
         '''
         Finds corresponding multi-index of the box that contains x.
         '''
-        mind = -1*_np.ones(self._d, _np.int64)
+        mind = -1 * _np.ones(self._d, _np.int64)
         for i in range(self._d):
             if x[i] < self._bounds[i, 0] or x[i] >= self._bounds[i, 1]:
                 print('Value out of bounds! Invalid box returned.')
@@ -95,23 +98,29 @@ class discretization(object):
             mind[i] = _np.floor((x[i] - self._bounds[i, 0]) / self._h[i])
         return mind
 
-    def midpointGrid(self):
+    def midpointGrid(self, n=None):
         '''
         Returns a grid given by the midpoints of the boxes.
         '''
         b = self._bounds
         h = self._h
         d = self._d
-        n = self.numBoxes()
+        if n is None:
+            n = self.numBoxes()
+        else:
+            n = min(n, self.numBoxes())
+
         x = []
         for i in range(d):
-            x.append( _np.linspace(b[i, 0] + h[i]/2, b[i, 1] - h[i]/2, self._boxes[i]) )
+            x.append(
+                _np.linspace(b[i, 0] + h[i] / 2, b[i, 1] - h[i] / 2,
+                             self._boxes[i]))
         X = _sp.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
-            c[i, :] = X[i].reshape(n)
+            c[i, :] = X[i].reshape(self.numBoxes())[0:n]
         return c
-    
+
     def vertexGrid(self):
         '''
         Returns a grid given by the vertices.
@@ -121,14 +130,14 @@ class discretization(object):
         n = self.numVertices()
         x = []
         for i in range(d):
-            x.append( _np.linspace(b[i, 0], b[i, 1], self._boxes[i]+1) )
+            x.append(_np.linspace(b[i, 0], b[i, 1], self._boxes[i] + 1))
         X = _sp.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
             c[i, :] = X[i].reshape(n)
         isBoundary = _np.zeros(X[i].shape, dtype=bool)
         for i in range(d):
-            ind = d*[slice(None)]
+            ind = d * [slice(None)]
             ind[i] = [0, self._boxes[i]]
             isBoundary[tuple(ind)] = True
         isBoundary = isBoundary.reshape(n)
@@ -165,7 +174,7 @@ class discretization(object):
         Y = c[1, :].reshape(dims)
         Z = v.reshape(dims)
 
-        if mode=='2D':
+        if mode == '2D':
             matplotlib.pyplot.pcolor(X, Y, Z)
         else:
             fig = matplotlib.pyplot.gcf()
@@ -179,7 +188,7 @@ class discretization(object):
         Y = c[1, :].reshape(dims)
         Z = c[2, :].reshape(dims)
         V = v.reshape(dims)
-        
+
         fig = matplotlib.pyplot.gcf()
         ax = fig.subplots(subplot_kw={"projection": "3d"})
         ax.scatter(X, Y, Z, c=V)
@@ -187,9 +196,10 @@ class discretization(object):
         ax.set_ylabel('x_2')
         ax.set_zlabel('x_3')
 
+
 # auxiliary functions
 def randb(n, b):
     '''
     Returns an array of n uniformly distributed random values in the interval b.
     '''
-    return b[0] + (b[1] - b[0])*_sp.rand(1, n)
+    return b[0] + (b[1] - b[0]) * _sp.rand(1, n)

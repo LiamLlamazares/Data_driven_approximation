@@ -17,77 +17,71 @@ class monomials(object):
     Computation of monomials in d dimensions.
     '''
 
-    def __init__(self, p):
+    def __init__(self, p, n=None):
         '''
         The parameter p defines the maximum order of the monomials.
         '''
         self.p = p
+        self.n = n  # number of monomials, takes first n
 
-    def __call__(self, x):
+    def __call__(self, x, n=None):
         '''
         Evaluate all monomials of order up to p for all data points in x.
+        If n is provided, only the first n monomials are evaluated.
         '''
         [d, m
          ] = x.shape  # d = dimension of state space, m = number of test points
         c = allMonomialPowers(
             d, self.p)  # matrix containing all powers for the monomials
-        n = c.shape[1]  # number of monomials
+        if self.n is None:
+            n = c.shape[1]  # number of monomials
+        else:
+            n = min(self.n, c.shape[1])  # limit to n monomials
         y = _np.ones([n, m])
         for i in range(n):
             for j in range(d):
                 y[i, :] = y[i, :] * _np.power(x[j, :], c[j, i])
         return y
 
-    def diff(self, x):
+    def diff(self, x, n=None):
         '''
-        Compute partial derivatives for all data points in x.
+        Evaluate the derivative of all monomials of order up to p for all data points in x.
+        If n is provided, only the derivative of the first n monomials are evaluated.
         '''
         [d, m
          ] = x.shape  # d = dimension of state space, m = number of test points
         c = allMonomialPowers(
             d, self.p)  # matrix containing all powers for the monomials
-        n = c.shape[1]  # number of monomials
+        if self.n is None:
+            n = c.shape[1]  # number of monomials
+        else:
+            n = min(self.n, c.shape[1])  # limit to n monomials
         y = _np.zeros([n, d, m])
-        for i in range(n):  # for all monomials
-            for j in range(d):  # for all dimensions
-                e = c[:, i].copy()  # exponents of ith monomial
-                a = e[j]
-                e[j] = e[j] - 1  # derivative w.r.t. j
-
-                if _np.any(e < 0):
-                    continue  # nothing to do, already zero
-
-                y[i, j, :] = a * _np.ones([1, m])
-                for k in range(d):
-                    y[i, j, :] = y[i, j, :] * _np.power(x[k, :], e[k])
+        for i in range(n):
+            for j in range(d):
+                y[i, j, :] = c[j, i] * _np.power(x[j, :], c[j, i] - 1)
         return y
 
-    def ddiff(self, x):
+    def ddiff(self, x, n=None):
         '''
-        Compute second order derivatives for all data points in x.
+        Evaluate the second derivative of all monomials of order up to p for all data points in x.
+        If n is provided, only the second derivative of the first n monomials are evaluated.
         '''
         [d, m
          ] = x.shape  # d = dimension of state space, m = number of test points
         c = allMonomialPowers(
             d, self.p)  # matrix containing all powers for the monomials
-        n = c.shape[1]  # number of monomials
+        if self.n is None:
+            n = c.shape[1]  # number of monomials
+        else:
+            n = min(self.n, c.shape[1])  # limit to n monomials
         y = _np.zeros([n, d, d, m])
-        for i in range(n):  # for all monomials
-            for j1 in range(d):  # for all dimensions
-                for j2 in range(d):  # for all dimensions
-                    e = c[:, i].copy()  # exponents of ith monomial
-                    a = e[j1]
-                    e[j1] = e[j1] - 1  # derivative w.r.t. j1
-                    a *= e[j2]
-                    e[j2] = e[j2] - 1  # derivative w.r.t. j2
-
-                    if _np.any(e < 0):
-                        continue  # nothing to do, already zero
-
-                    y[i, j1, j2, :] = a * _np.ones([1, m])
-                    for k in range(d):
-                        y[i, j1,
-                          j2, :] = y[i, j1, j2, :] * _np.power(x[k, :], e[k])
+        for i in range(n):
+            for j in range(d):
+                for k in range(d):
+                    if j == k:
+                        y[i, j, k, :] = c[j, i] * (c[j, i] - 1) * _np.power(
+                            x[j, :], c[j, i] - 2)
         return y
 
     def __repr__(self):
@@ -175,27 +169,31 @@ class gaussians(object):
     sigma: width of Gaussians
     '''
 
-    def __init__(self, Omega, sigma=1):
+    def __init__(self, Omega, sigma=1, n=None):
         self.Omega = Omega
         self.sigma = sigma
+        self.n = n  # number of Gaussians, all if n is None
 
-    def __call__(self, x):
+    def __call__(self, x, n=None):
         '''
         Evaluate Gaussians for all data points in x.
         '''
-        c = self.Omega.midpointGrid()
+        c = self.Omega.midpointGrid(self.n)
         D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.exp(-1 / (2 * self.sigma**2) * D)
         return y
 
-    def diff(self, x):
+    def diff(self, x, n=None):
         '''
         Compute partial derivatives for all data points in x.
         '''
         [d, m
          ] = x.shape  # d = dimension of state space, m = number of test points
-        n = self.Omega.numBoxes()  # number of basis functions
-        c = self.Omega.midpointGrid()
+        if self.n is None:
+            n = self.Omega.numBoxes()  # number of basis functions
+        else:
+            n = min(self.n, self.Omega.numBoxes())
+        c = self.Omega.midpointGrid(self.n)
         D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.zeros([n, d, m])
         for i in range(n):  # for all Gaussians
@@ -212,8 +210,11 @@ class gaussians(object):
         '''
         [d, m
          ] = x.shape  # d = dimension of state space, m = number of test points
-        n = self.Omega.numBoxes()  # number of basis functions
-        c = self.Omega.midpointGrid()
+        if self.n is None:
+            n = self.Omega.numBoxes()  # number of basis functions
+        else:
+            n = min(self.n, self.Omega.numBoxes())
+        c = self.Omega.midpointGrid(self.n)
         D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.zeros([n, d, d, m])
         for i in range(n):  # for all Gaussians

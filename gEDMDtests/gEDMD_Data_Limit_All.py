@@ -21,12 +21,12 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 plt.ion()
 # Constants
 M = 20000
-number_of_runs = 100
+number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
 number_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians']
-min_number_of_data_points = 200
+min_number_of_data_points = 250
 
 # ########################################
 #Simple deterministic system
@@ -50,6 +50,7 @@ psi_m = observables.monomials(number_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
+X = Omega.rand(2)
 gedmd_helper.plot_errors_data_limit(M,
                                     min_number_of_data_points,
                                     confidence_level,
