@@ -206,7 +206,7 @@ gedmd_helper.plot_errors_data_limit(M,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
+        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
                                    sigma)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
@@ -216,7 +216,7 @@ gedmd_helper.plot_errors_data_limit(M,
                   observables_names[type])
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
-                A, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
+                A, _, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
                                         sigma)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
@@ -401,7 +401,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
+        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
                                    sigma)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
@@ -411,7 +411,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                   observables_names[type])
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
-                A, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
+                A, _, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
                                         sigma)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
@@ -536,8 +536,8 @@ def gedmdErrors(X_exact, X, psi, b, Omega):
     ```
     """
     #Calculate the operator matrix
-    A, _, _ = gedmdMatrices(X, psi, b, Omega)
-    A_exact, G_exact, C_exact = gedmdMatrices(X_exact, psi, b, Omega)
+    A, _, _, _ = gedmdMatrices(X, psi, b, Omega)
+    A_exact, G_exact, C_exact, _ = gedmdMatrices(X_exact, psi, b, Omega)
 
     #Operator norms
     operator_norm_A_exact = sp.linalg.norm(A_exact, 2)
