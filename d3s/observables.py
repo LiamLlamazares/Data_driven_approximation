@@ -139,6 +139,7 @@ class monomials(object):
         '''
         Calculate the number of monomials for all data points in x.
         '''
+        p = self.p
         return int((p + 1) * (p + 2) / 2)
 
 
