@@ -28,6 +28,7 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None):
     A (numpy.ndarray): The gEDMD matrix.
     G (numpy.ndarray): The Gramm matrix.
     C (numpy.ndarray): The stiffness matrix.
+    T (numpy.ndarray): The graph matrix <L psi_i, L psi_j>.
 
     Example:
     ```python
@@ -44,7 +45,7 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None):
     
     X=Omega.rand(10000)
     psi = observables.monomials(i)
-    A, G, C = gedmd_helper.gedmdMatrix(Xexact, X, psi, b, Omega=Omega)
+    A, G, C, T = gedmd_helper.gedmdMatrix(Xexact, X, psi, b, Omega=Omega)
 
     ```
     """
@@ -206,8 +207,8 @@ gedmd_helper.plot_errors_data_limit(M,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
-                                   sigma)
+        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b,
+                                      Omega, sigma)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
 
@@ -217,7 +218,7 @@ gedmd_helper.plot_errors_data_limit(M,
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
                 A, _, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
-                                        sigma)
+                                           sigma)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
 
@@ -306,7 +307,6 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  confidence_level,
                                  number_of_runs,
                                  number_of_batches,
-                                 observables_list,
                                  observables_names,
                                  Omega,
                                  b,
@@ -314,7 +314,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  block=True,
                                  M_exact=None,
                                  M_approx=None,
-                                 p=0.5):
+                                 prob=0.5):
     """
     Plots the matrix error for different number of dictionary elements and observables.
 
@@ -324,8 +324,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
     confidence_level (float): The confidence level for the confidence intervals.
     number_of_runs (int): The number of runs.
     number_of_batches (int): The number of batches.
-    observables_list (list): A list of observables.
-    observables_names (list): A list of names for the observables.
+    observables_names (list): A list of names for the observables. Accepts 'Monomials' and 'Gaussians'.
     Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
     b (function): The drift function.
     sigma (function, optional): The diffusion function. Defaults to None.
@@ -374,49 +373,72 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                     b,
                                     block=True,
                                     M_exact = M_exact,
-                                    M = M,
+                                    M = M_approx,
                                     p =0.9)
     """
+    p = 0  #Monomials degree
+    while int((p + 1) * (p + 2) / 2) < max_number_of_observables:
+        p = p + 1
     # generate data
     number_of_loops_observables = int(
-        np.floor(np.log2(
-            max_number_of_observables / min_number_of_observables))) + 1
+        np.floor(np.log2(max_number_of_observables /
+                         min_number_of_observables)))
 
     observables_numbers = [
         min_number_of_observables * 2**x
-        for x in range(0, max_number_of_observables)
+        for x in range(0, number_of_loops_observables)
     ]
     print('max observables = ',
           min_number_of_observables * 2**number_of_loops_observables,
           'number_of_loops = ', number_of_loops_observables)
-    types_of_observables_number = len(observables_list)
-    A_exact = []
-    A_exact_matrix_norm = []
+    types_of_observables_number = len(observables_names)
     matrix_errors = np.zeros((number_of_loops_observables,
                               types_of_observables_number, number_of_runs))
     matrix_errors_average = np.zeros(
         (number_of_loops_observables, types_of_observables_number))
+    uniform_norm_dictionary = np.ones(
+        (number_of_loops_observables, types_of_observables_number))
+    theoretical_errors = np.zeros(
+        (number_of_loops_observables, types_of_observables_number))
     X_exact = Omega.rand(M_exact)
-    X_approx = Omega.rand(M_approx)
-
     for type in range(types_of_observables_number):
+        for i in range(number_of_loops_observables):
+            if observables_names[type] == 'Monomials':
+                dictionary = observables.monomials(p=p,
+                                                   n=observables_numbers[i])
+            elif observables_names[type] == 'Gaussians':
+                variance = (Omega._bounds[0, 1] -
+                            Omega._bounds[0, 0]) / Omega._boxes[0] / 2
+                dictionary = observables.gaussians(Omega,
+                                                   sigma=variance,
+                                                   n=observables_numbers[i])
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b, Omega,
-                                   sigma)
-        A_exact.append(A_ex)
-        A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
 
-        for m in range(number_of_runs):
-            print('runs completed = ', m, '/', number_of_runs, "type = ",
-                  observables_names[type])
-            for i in range(number_of_loops_data_points):
-                X = Omega.rand(data_points_number[i])
-                A, _, _, _ = gedmdMatrices(X, observables_list[type], b, Omega,
-                                        sigma)
+            A_exact, G_exact, C_exact, T_exact = gedmdMatrices(
+                X_exact, dictionary, b, Omega, sigma)
+            A_exact_matrix_norm = np.linalg.norm(A_exact, ord=2)
+            G_exact_matrix_norm = np.linalg.norm(G_exact, ord=2)
+            _, s, _ = np.linalg.svd(G_exact)
+            G_inv_exact_matrix_norm = 1 / np.min(s)
+            C_exact_matrix_norm = np.linalg.norm(C_exact, ord=2)
+            T_exact_matrix_norm = np.linalg.norm(T_exact, ord=2)
+            theoretical_errors[i, type] = np.sqrt(
+                uniform_norm_dictionary[i, type] *
+                max(G_exact_matrix_norm, T_exact_matrix_norm) /
+                max(A_exact_matrix_norm, 1) * C_exact_matrix_norm**2 *
+                G_inv_exact_matrix_norm**4 * np.log(observables_numbers[i] /
+                                                    (1 - prob)) / M_exact)
+
+            print('loops completed = ', i, '/', number_of_loops_observables,
+                  "type = ", observables_names[type])
+            for m in range(number_of_runs):
+                X_approx = Omega.rand(M_approx)
+                A_approx, _, _, _ = gedmdMatrices(X_approx, dictionary, b,
+                                                  Omega, sigma)
                 matrix_errors[i, type, m] = np.linalg.norm(
-                    A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
+                    A_exact - A_approx, ord=2) / A_exact_matrix_norm
 
-        matrix_errors_average = np.mean(matrix_errors, axis=2)
+    matrix_errors_average = np.mean(matrix_errors, axis=2)
     #calculate confidence intervals for the average error of the matrices (95% confidence) for each number of data points
     #first we divide the error data into number_of_batches batches
     batch_size = int(np.floor(
@@ -427,7 +449,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
             'batch size is 0. Please increase number of runs or decrease number of batches'
         )
     matrix_errors_batches = np.zeros(
-        (number_of_loops_data_points, types_of_observables_number,
+        (number_of_loops_observables, types_of_observables_number,
          number_of_batches))
     for nb in range(number_of_batches):
         matrix_errors_batches[:, :, nb] = np.mean(
@@ -448,51 +470,52 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
 
     # error plots
     plt.figure()
-    plt.loglog(data_points_number, matrix_errors_average)
+    plt.loglog(observables_numbers, matrix_errors_average)
 
     # plot confidence intervals as shaded regions
     lower_bound = matrix_errors_average - matrix_errors_confidence_interval
     upper_bound = matrix_errors_average + matrix_errors_confidence_interval
-    plt.fill_between(data_points_number,
+    plt.fill_between(observables_numbers,
                      lower_bound[:, 0],
                      upper_bound[:, 0],
                      color='blue',
                      alpha=0.2)
-    plt.fill_between(data_points_number,
+    plt.fill_between(observables_numbers,
                      lower_bound[:, 1],
                      upper_bound[:, 1],
                      color='orange',
                      alpha=0.2)
+    #Theoretical error
+    plt.loglog(observables_numbers, theoretical_errors[:, 1])
 
     # slopes
     plt.loglog(
-        data_points_number,
-        np.power(np.float64(data_points_number), -1) *
+        observables_numbers,
+        np.power(np.float64(observables_numbers), 1) *
         matrix_errors_average[0, 1] /
-        np.power(np.float64(data_points_number[0]), -1))
+        np.power(np.float64(observables_numbers[0]), 1))
     plt.loglog(
-        data_points_number,
-        np.power(np.float64(data_points_number), -0.5) *
+        observables_numbers,
+        np.power(np.float64(observables_numbers), 0.5) *
         matrix_errors_average[0, 1] /
-        np.power(np.float64(data_points_number[0]), -0.5))
-    plt.xlabel('number of data points M')
+        np.power(np.float64(observables_numbers[0]), 0.5))
+    plt.xlabel('number of observables N')
 
     # plot legends
-    for type in range(types_of_observables_number):
-        plt.legend(observables_names[type])
-
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
-    legend_labels = observables_error_labels + CI_labels + [
-        '$M^{-1}$', '$M^{-0.5}$'
+    theoretical_labels = [f'Theoretical {name}' for name in observables_names]
+    legend_labels = observables_error_labels + CI_labels + theoretical_labels + [
+        '$M$', '$M^{0.5}$'
     ]
 
     plt.legend(legend_labels)
     plt.title('log-log-plot of error in matrix norm vs number of observables')
     print('The number of observables of each method is:')
 
-    for i in range(len(observables_list)):
-        print(observables_names[i], ':', observables_list[i].length())
+    for i in range(len(observables_names)):
+        print(observables_names[i], ':', observables_numbers[i])
+        print('Theoretical error is:', theoretical_errors[i])
     plt.show(block=block)
 
 
