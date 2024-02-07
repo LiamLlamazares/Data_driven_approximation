@@ -111,9 +111,6 @@ t_value = stats.t.ppf((1 + confidence_level) / 2, number_of_batches - 1)
 matrix_errors_confidence_interval = t_value * matrix_errors_std / np.sqrt(
     number_of_batches)
 
-#error plots
-# ... rest of your code ...
-
 # error plots
 plt.figure()
 plt.loglog(data_points_number, matrix_errors_average)
