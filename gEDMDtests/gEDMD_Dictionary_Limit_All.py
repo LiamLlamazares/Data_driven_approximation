@@ -59,7 +59,7 @@ gedmd_helper.plot_errors_dictionary_limit(
     Omega,
     b,
     sigma=None,
-    block=False,
+    block=True,
     M_exact=M_exact,
     M_approx=M_approx,
     prob=0.5,
@@ -95,7 +95,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           M_exact=M_exact,
                                           M_approx=M_approx,
                                           prob=0.5,
-                                          title='Double well system gEDMD')
+                                         title ='Double well system gEDMD')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,

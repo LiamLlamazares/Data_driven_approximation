@@ -17,12 +17,13 @@ import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
 import d3s.gEDMD_tests_helper_functions as gedmd_helper
+import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 20000
-number_of_runs = 50
-number_of_batches = 10
+M = 50000
+number_of_runs = 20
+number_of_batches = 5
 confidence_level = 0.95
 number_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians']
@@ -60,7 +61,9 @@ gedmd_helper.plot_errors_data_limit(M,
                                     observables_names,
                                     Omega,
                                     b,
-                                    block=True)
+                                    sigma_noise=0.001,
+                                    title='Simple deterministic system gEDMD',
+                                    block=False)
 
 
 # ########################################
@@ -79,17 +82,37 @@ def sigma(x):
     return y
 
 
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    block=True)
+gedmd_helper.plot_errors_data_limit(
+    M,
+    min_number_of_data_points,
+    confidence_level,
+    number_of_runs,
+    number_of_batches,
+    observables_list,
+    observables_names,
+    Omega,
+    b,
+    sigma=sigma,
+    title='Double well system gEDMD',
+    block=False,
+)
+
+f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
+gedmd_helper.plot_errors_data_limit(
+    M,
+    min_number_of_data_points,
+    confidence_level,
+    number_of_runs,
+    number_of_batches,
+    observables_list,
+    observables_names,
+    Omega,
+    b,
+    f=f,
+    sigma=sigma,
+    title='Double well system EDMD',
+    block=False,
+)
 
 # ########################################
 #OU system
@@ -128,4 +151,22 @@ gedmd_helper.plot_errors_data_limit(M,
                                     Omega,
                                     b,
                                     sigma=sigma,
-                                    block=True)
+                                    title='OU system gEDMD',
+                                    block=False)
+
+h = 0.001  #EDMD
+tau = 0.5
+f = systems.OrnsteinUhlenbeck(h, int(tau / h))
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    f=f,
+                                    title='OU system gEDMD',
+                                    block=False)
