@@ -23,7 +23,7 @@ plt.ion()
 M_exact = 40000
 M_approx = 10000
 min_number_of_observables = 2
-max_number_of_observables = 6400
+max_number_of_observables = 2000
 
 number_of_runs = 50
 number_of_batches = 5
@@ -59,6 +59,7 @@ gedmd_helper.plot_errors_dictionary_limit(
     Omega,
     b,
     sigma=None,
+    sigma_noise=0.1,
     block=True,
     M_exact=M_exact,
     M_approx=M_approx,
@@ -82,6 +83,7 @@ def sigma(x):
     return y
 
 
+observables_names = ['Gaussians', 'Monomials']
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           max_number_of_observables,
                                           confidence_level,
@@ -95,7 +97,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           M_exact=M_exact,
                                           M_approx=M_approx,
                                           prob=0.5,
-                                         title ='Double well system gEDMD')
+                                          title='Double well system gEDMD')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
@@ -137,7 +139,7 @@ def sigma(x):
 
 
 #define observables
-observables_names = ['Gaussians']
+observables_names = ['Gaussians', 'Monomials']
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           max_number_of_observables,
                                           confidence_level,

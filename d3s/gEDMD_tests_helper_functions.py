@@ -8,12 +8,18 @@ import scipy.stats as stats
 # a collection of observables
 # and the drift function b
 #and the domain Omega (by default a square [-1,1]^2)
-import d3s.algorithms as algorithms
 import d3s.domain as domain
 import d3s.observables as observables
 
 
-def gedmdMatrices(X, psi, b, Omega, sigma=None, f=None, sigma_noise=0):
+def gedmdMatrices(X,
+                  psi,
+                  b,
+                  Omega,
+                  sigma=None,
+                  f=None,
+                  sigma_noise=0,
+                  operator='K'):
     """
     Calculates the gEDMD matrix for the ODE dX=b(X)dt.
 
@@ -32,6 +38,7 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None, f=None, sigma_noise=0):
     G (numpy.ndarray): The Gramm matrix.
     C (numpy.ndarray): The stiffness matrix.
     T (numpy.ndarray): The graph matrix <L psi_i, L psi_j>.
+    uniform_norm_psi_A_psi (float): The uniform norm of (psi,A psi)
 
     Example:
     ```python
@@ -72,7 +79,9 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None, f=None, sigma_noise=0):
 
         G = PsiX @ PsiX.T
         C = PsiX @ dPsiY.T
+        if operator == 'P': C = C.T
         T = dPsiY @ dPsiY.T
+        uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
     else:  #EDMD
         Y = f(X)
         PsiX = psi(X)
@@ -84,12 +93,14 @@ def gedmdMatrices(X, psi, b, Omega, sigma=None, f=None, sigma_noise=0):
 
         G = PsiX @ PsiX.T
         C = PsiX @ PsiY.T
+        if operator == 'P': C = C.T
         T = PsiY @ PsiY.T
+        uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
 
     #A = sp.linalg.pinv(G) @ C.T
-    A = sp.linalg.solve(G, C.T)
+    A = sp.linalg.solve(G, C)
 
-    return A, G, C, T
+    return A, G, C, T, uniform_norm_psi_A_psi
 
 
 def plot_errors_data_limit(
@@ -109,6 +120,7 @@ def plot_errors_data_limit(
     title=None,
     power_1=-1,
     power_2=-0.5,
+    operator='K',
 ):
     """
     Plots the matrix error for different number of data points and observables.
@@ -175,13 +187,13 @@ gedmd_helper.plot_errors_data_limit(M,
     """
     # generate data
     number_of_loops_data_points = int(
-        np.floor(np.log2(M / min_number_of_data_points))) + 1
+        np.floor(np.log2(M / min_number_of_data_points))) 
 
     data_points_number = [
         min_number_of_data_points * 2**x
         for x in range(0, number_of_loops_data_points)
     ]
-    print('max data_points_number = ',
+    print(title, ' max data_points_number = ',
           min_number_of_data_points * 2**number_of_loops_data_points,
           'number_of_loops = ', number_of_loops_data_points)
     types_of_observables_number = len(observables_list)
@@ -195,8 +207,13 @@ gedmd_helper.plot_errors_data_limit(M,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _, _ = gedmdMatrices(X_exact, observables_list[type], b,
-                                      Omega, sigma, f)
+        A_ex, _, _, _, _ = gedmdMatrices(X_exact,
+                                         observables_list[type],
+                                         b,
+                                         Omega,
+                                         sigma,
+                                         f,
+                                         operator=operator)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
 
@@ -205,13 +222,14 @@ gedmd_helper.plot_errors_data_limit(M,
                   observables_names[type])
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
-                A, _, _, _ = gedmdMatrices(X,
-                                           observables_list[type],
-                                           b,
-                                           Omega,
-                                           sigma,
-                                           f,
-                                           sigma_noise=sigma_noise)
+                A, _, _, _, _, = gedmdMatrices(X,
+                                               observables_list[type],
+                                               b,
+                                               Omega,
+                                               sigma,
+                                               f,
+                                               sigma_noise=sigma_noise,
+                                               operator=operator)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
 
@@ -309,6 +327,8 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  sigma=None,
                                  f=None,
                                  sigma_noise=0,
+                                 operator='K',
+                                 gamma=1,
                                  block=True,
                                  M_exact=None,
                                  M_approx=None,
@@ -330,7 +350,8 @@ def plot_errors_dictionary_limit(min_number_of_observables,
     b (function): The drift function.
     sigma (function, optional): The diffusion function. Defaults to None.
     f (function, optional): The forward operator, defaults to None. If supplied, EDMD is used. Otherwise, gEDMD is used
-    sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_i Apsi_i. Defaults to 0.
+    sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_i A(psi_i). Defaults to 0.
+    gamma (float,optional): The supremum norm of psi and A psi, defaults to 1
     block (bool, optional): Whether to block the plot. Defaults to True.
     M_exact (int, optional): The number of data points for the exact system. Defaults to None.
     M_approx (int, optional): The number of data points for the approximate system. Defaults to None.
@@ -338,7 +359,6 @@ def plot_errors_dictionary_limit(min_number_of_observables,
     title (str, optional): The title of the plot. Defaults to None.
     power_1 (float, optional): The power of the first slope. Defaults to 0.5.
     power_2 (float, optional): The power of the second slope. Defaults to 0.25.
-    sigma_noise (float, optional): The standard deviation of the noise. Defaults to None.
 
     Example:
     ```python
@@ -407,8 +427,6 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                               types_of_observables_number, number_of_runs))
     matrix_errors_average = np.zeros(
         (number_of_loops_observables, types_of_observables_number))
-    uniform_norm_dictionary = np.ones(
-        (number_of_loops_observables, types_of_observables_number))
     theoretical_errors = np.zeros(
         (number_of_loops_observables, types_of_observables_number))
     X_exact = Omega.rand(M_exact)
@@ -425,8 +443,8 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                                    n=observables_numbers[i])
         # Exacts operators are the same over all runs to save time
 
-            A_exact, G_exact, C_exact, T_exact = gedmdMatrices(
-                X_exact, dictionary, b, Omega, sigma, f)
+            A_exact, G_exact, C_exact, T_exact, gamma = gedmdMatrices(
+                X_exact, dictionary, b, Omega, sigma, f, operator=operator)
             A_exact_matrix_norm = np.linalg.norm(A_exact, ord=2)
             G_exact_matrix_norm = np.linalg.norm(G_exact, ord=2)
             _, s, _ = np.linalg.svd(G_exact)
@@ -434,23 +452,25 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
             C_exact_matrix_norm = np.linalg.norm(C_exact, ord=2)
             T_exact_matrix_norm = np.linalg.norm(T_exact, ord=2)
             theoretical_errors[i, type] = np.sqrt(
-                uniform_norm_dictionary[i, type] *
+                (gamma + sigma_noise) *
                 max(G_exact_matrix_norm, T_exact_matrix_norm) /
                 max(A_exact_matrix_norm, 1) * C_exact_matrix_norm**2 *
                 G_inv_exact_matrix_norm**4 * np.log(observables_numbers[i] /
-                                                    (1 - prob)) / M_exact)
+                                                    (1 - prob)) /
+                M_exact) / A_exact_matrix_norm
 
             print('loops completed = ', i, '/', number_of_loops_observables,
                   "type = ", observables_names[type])
             for m in range(number_of_runs):
                 X_approx = Omega.rand(M_approx)
-                A_approx, _, _, _ = gedmdMatrices(X_approx,
-                                                  dictionary,
-                                                  b,
-                                                  Omega,
-                                                  sigma,
-                                                  f,
-                                                  sigma_noise=sigma_noise)
+                A_approx, _, _, _, _ = gedmdMatrices(X_approx,
+                                                     dictionary,
+                                                     b,
+                                                     Omega,
+                                                     sigma,
+                                                     f,
+                                                     sigma_noise=sigma_noise,
+                                                     operator=operator)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact - A_approx, ord=2) / A_exact_matrix_norm
 

@@ -21,9 +21,9 @@ import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 50000
-number_of_runs = 20
-number_of_batches = 5
+M = 100000
+number_of_runs = 30
+number_of_batches = 10
 confidence_level = 0.95
 number_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians']
@@ -61,8 +61,9 @@ gedmd_helper.plot_errors_data_limit(M,
                                     observables_names,
                                     Omega,
                                     b,
-                                    sigma_noise=0.001,
+                                    sigma_noise=0,
                                     title='Simple deterministic system gEDMD',
+                                    operator='K',
                                     block=False)
 
 
@@ -120,7 +121,7 @@ gedmd_helper.plot_errors_data_limit(
 
 # define domain
 bounds = np.array([[-2, 2]])
-boxes = np.array([45])
+boxes = np.array([number_of_monomials])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -141,6 +142,7 @@ psi_m = observables.monomials(number_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
+#gEDMD Koopman operator
 gedmd_helper.plot_errors_data_limit(M,
                                     min_number_of_data_points,
                                     confidence_level,
@@ -152,6 +154,21 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma=sigma,
                                     title='OU system gEDMD',
+                                    operator='K',
+                                    block=False)
+# gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    title='OU system gEDMD',
+                                    operator='P',
                                     block=False)
 
 h = 0.001  #EDMD
@@ -168,5 +185,5 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma=sigma,
                                     f=f,
-                                    title='OU system gEDMD',
-                                    block=False)
+                                    title='OU system EDMD',
+                                    block=True)
