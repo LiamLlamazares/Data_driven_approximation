@@ -22,9 +22,9 @@ import d3s.systems as systems
 plt.ion()
 M_exact = 100000
 M_approx = 10000
-min_number_of_observables = 20
-boxes1 = 50
-boxes2 = 25
+min_number_of_observables = 2
+boxes1 = 20
+boxes2 = 10
 boxes = np.array([boxes1, boxes2])
 max_number_of_observables = boxes1 * boxes2
 
@@ -67,7 +67,8 @@ gedmd_helper.plot_errors_dictionary_limit(
     M_approx=M_approx,
     prob=0.5,
     #title='Simple deterministic system gEDMD',
-    path='ODE')
+    #path='ODE'
+)
 
 
 # ########################################
