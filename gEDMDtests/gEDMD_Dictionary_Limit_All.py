@@ -23,10 +23,10 @@ plt.ion()
 M_exact = 100000
 M_approx = 10000
 min_number_of_observables = 2
-boxes1 = 32
-boxes2 = 16
+boxes1 = 2
+boxes2 = 2
 boxes = np.array([boxes1, boxes2])
-max_number_of_observables = boxes1 * boxes2
+max_number_of_observables = 100
 
 number_of_runs = 50
 number_of_batches = 5
@@ -37,7 +37,7 @@ number_of_monomials = 8
 #Simple deterministic system
 # ########################################
 # define domain
-bounds = np.array([[-2, 2], [-1, 1]])
+bounds = np.array([[-1, 1], [-1, 1]])
 Omega = domain.discretization(bounds, boxes)
 
 # define system

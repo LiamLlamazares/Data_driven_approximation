@@ -339,6 +339,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  sigma_noise=0,
                                  operator='K',
                                  gamma=1,
+                                 multiplier=1.3,
                                  block=True,
                                  M_exact=None,
                                  M_approx=None,
@@ -422,17 +423,22 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
     p = 0  #Monomials degree
     while int((p + 1) * (p + 2) / 2) < max_number_of_observables:
         p = p + 1
-    # generate data
-    number_of_loops_observables = int(
-        np.floor(np.log2(max_number_of_observables /
-                         min_number_of_observables)))
+    # get finer and finer mesh for gaussians
+    boxes_list = [np.array(Omega._boxes)]
+    Omega_list = [Omega]
+    observables_numbers = [boxes_list[-1][0] * boxes_list[-1][1]]
+    while observables_numbers[-1] < max_number_of_observables:
+        boxes_list.append(
+            np.array([
+                int(max(np.round(number), number + 1))
+                for number in multiplier * np.array(boxes_list[-1])
+            ]))
+        Omega_list.append(domain.discretization(Omega._bounds, boxes_list[-1]))
+        observables_numbers.append(boxes_list[-1][0] * boxes_list[-1][1])
 
-    observables_numbers = [
-        min_number_of_observables * 2**x
-        for x in range(0, number_of_loops_observables)
-    ]
-    print(title, ' max observables = ',
-          min_number_of_observables * 2**number_of_loops_observables,
+    number_of_loops_observables = len(observables_numbers)
+
+    print(title, ' max observables = ', observables_numbers[-1],
           'number_of_loops = ', number_of_loops_observables)
     types_of_observables_number = len(observables_names)
     matrix_errors = np.zeros((number_of_loops_observables,
@@ -444,15 +450,15 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
     X_exact = Omega.rand(M_exact)
     for type in range(types_of_observables_number):
         for i in range(number_of_loops_observables):
+            Omega = Omega_list[i]
             if observables_names[type] == 'Monomials':
                 dictionary = observables.monomials(p=p,
                                                    n=observables_numbers[i])
             elif observables_names[type] == 'Gaussians':
                 variance = (Omega._bounds[0, 1] -
                             Omega._bounds[0, 0]) / Omega._boxes[0] / 2
-                dictionary = observables.gaussians(Omega,
-                                                   sigma=variance,
-                                                   n=observables_numbers[i])
+                dictionary = observables.gaussians(Omega, sigma=variance)
+                print('Gaussians created', dictionary.length())
         # Exacts operators are the same over all runs to save time
 
             A_exact, G_exact, C_exact, T_exact, gamma = gedmdMatrices(
