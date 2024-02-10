@@ -23,8 +23,8 @@ plt.ion()
 M_exact = 100000
 M_approx = 10000
 min_number_of_observables = 20
-boxes1 = 200
-boxes2 = 100
+boxes1 = 50
+boxes2 = 25
 boxes = np.array([boxes1, boxes2])
 max_number_of_observables = boxes1 * boxes2
 
@@ -129,7 +129,7 @@ gedmd_helper.plot_errors_dictionary_limit(
 
 # define domain
 bounds = np.array([[-2, 2]])
-boxes = np.array(max_number_of_observables)
+boxes = np.array([max_number_of_observables])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
