@@ -426,7 +426,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
     # get finer and finer mesh for gaussians
     boxes_list = [np.array(Omega._boxes)]
     Omega_list = [Omega]
-    observables_numbers = [boxes_list[-1][0] * boxes_list[-1][1]]
+    observables_numbers = [Omega.numBoxes()]
     while observables_numbers[-1] < max_number_of_observables:
         boxes_list.append(
             np.array([
@@ -434,7 +434,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                 for number in multiplier * np.array(boxes_list[-1])
             ]))
         Omega_list.append(domain.discretization(Omega._bounds, boxes_list[-1]))
-        observables_numbers.append(boxes_list[-1][0] * boxes_list[-1][1])
+        observables_numbers.append(Omega_list[-1].numBoxes())
 
     number_of_loops_observables = len(observables_numbers)
 

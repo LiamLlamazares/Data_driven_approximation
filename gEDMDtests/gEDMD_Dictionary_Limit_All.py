@@ -26,7 +26,7 @@ min_number_of_observables = 2
 boxes1 = 2
 boxes2 = 2
 boxes = np.array([boxes1, boxes2])
-max_number_of_observables = 100
+max_number_of_observables = 1000
 
 number_of_runs = 50
 number_of_batches = 5
@@ -128,8 +128,8 @@ gedmd_helper.plot_errors_dictionary_limit(
 # ########################################
 
 # define domain
-bounds = np.array([[-2, 2]])
-boxes = np.array([max_number_of_observables])
+bounds = np.array([[-1, 1]])
+boxes = np.array([2])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
