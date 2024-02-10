@@ -121,6 +121,7 @@ def plot_errors_data_limit(
     power_1=-1,
     power_2=-0.5,
     operator='K',
+    path=None,
 ):
     """
     Plots the matrix error for different number of data points and observables.
@@ -141,6 +142,8 @@ def plot_errors_data_limit(
     block (bool, optional): Whether to block the plot. Defaults to True.
     power_1 (float, optional): The power of the first slope. Defaults to -1.
     power_2 (float, optional): The power of the second slope. Defaults to -0.5.
+    operator (str, optional): The operator to be used (Koopman, Perron Frobenius). Defaults to 'K'.
+    path (str, optional): The path to save the plot. Defaults to None.
 
     Example:
     ```python
@@ -187,7 +190,7 @@ gedmd_helper.plot_errors_data_limit(M,
     """
     # generate data
     number_of_loops_data_points = int(
-        np.floor(np.log2(M / min_number_of_data_points))) 
+        np.floor(np.log2(M / min_number_of_data_points)))
 
     data_points_number = [
         min_number_of_data_points * 2**x
@@ -293,26 +296,33 @@ gedmd_helper.plot_errors_data_limit(M,
         np.power(np.float64(data_points_number), power_2) *
         matrix_errors_average[0, 0] /
         np.power(np.float64(data_points_number[0]), power_2))
-    plt.xlabel('number of data points M')
+    plt.xlabel(f'$M$')
+    plt.ylabel(f'$\epsilon$')
 
     # plot legends
     for type in range(types_of_observables_number):
-        plt.legend(observables_names[type])
+        plt.legend(observables_names[type], loc='lower left')
 
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
     legend_labels = observables_error_labels + CI_labels + [
         f'$M^{{{power_1}}}$', f'$M^{{{power_2}}}$'
     ]
-
-    plt.legend(legend_labels)
-    title = (' for ' + title if title else '') + (
-        f' with noise $\sigma = {sigma_noise}$' if sigma_noise != 0 else '')
-    plt.title('Error in matrix norm vs number of observables' + title)
+    plt.legend(legend_labels, loc='lower left')
+    if title is not None:
+        title = (' for ' + title
+                 if title else '') + (f' with noise $\sigma = {sigma_noise}$'
+                                      if sigma_noise != 0 else '')
+        plt.title('Error in matrix norm vs number of data points' + title)
     print('The number of observables of each method is:')
 
     for i in range(len(observables_list)):
         print(observables_names[i], ':', observables_list[i].length())
+
+    if path is not None:
+        plt.savefig('gEDMDtests/Simulation_figures/Data_Limit/' + path +
+                    '.png',
+                    bbox_inches='tight')
     plt.show(block=block)
 
 
@@ -335,7 +345,8 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  prob=0.5,
                                  title=None,
                                  power_1=0.5,
-                                 power_2=0.25):
+                                 power_2=0.25,
+                                 path=None):
     """
     Plots the matrix error for different number of dictionary elements and observables.
 
@@ -351,7 +362,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
     sigma (function, optional): The diffusion function. Defaults to None.
     f (function, optional): The forward operator, defaults to None. If supplied, EDMD is used. Otherwise, gEDMD is used
     sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_i A(psi_i). Defaults to 0.
-    gamma (float,optional): The supremum norm of psi and A psi, defaults to 1
+    gamma (float,optional): The L^infinity (sup) norm of psi and A psi, defaults to 1
     block (bool, optional): Whether to block the plot. Defaults to True.
     M_exact (int, optional): The number of data points for the exact system. Defaults to None.
     M_approx (int, optional): The number of data points for the approximate system. Defaults to None.
@@ -359,6 +370,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
     title (str, optional): The title of the plot. Defaults to None.
     power_1 (float, optional): The power of the first slope. Defaults to 0.5.
     power_2 (float, optional): The power of the second slope. Defaults to 0.25.
+    path (str, optional): The path to save the plot. Defaults to None.
 
     Example:
     ```python
@@ -530,20 +542,21 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                                        0,
                                                        i] - theoretical_errors[
                                                            0, i]
-    plt.loglog(observables_numbers, theoretical_errors)
+    plt.loglog(observables_numbers, np.minimum(theoretical_errors, 1))
 
     # slopes
-    plt.loglog(
-        observables_numbers,
-        np.power(np.float64(observables_numbers), power_1) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(observables_numbers[0]), power_1))
-    plt.loglog(
-        observables_numbers,
-        np.power(np.float64(observables_numbers), power_2) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(observables_numbers[0]), power_2))
-    plt.xlabel('number of observables N')
+    # plt.loglog(
+    #     observables_numbers,
+    #     np.power(np.float64(observables_numbers), power_1) *
+    #     matrix_errors_average[0, 0] /
+    #     np.power(np.float64(observables_numbers[0]), power_1))
+    # plt.loglog(
+    #     observables_numbers,
+    #     np.power(np.float64(observables_numbers), power_2) *
+    #     matrix_errors_average[0, 0] /
+    #     np.power(np.float64(observables_numbers[0]), power_2))
+    plt.xlabel(f'$N$')
+    plt.ylabel(f'$\epsilon$')
 
     # plot legends
     observables_error_labels = [f'{name} error' for name in observables_names]
@@ -553,17 +566,23 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
         f'$M^{{{power_1}}}$', f'$M^{{{power_2}}}$'
     ]
 
-    plt.legend(legend_labels)
-    title = (' for ' + title if title else '') + (
-        f' with noise $\sigma = {sigma_noise}$' if sigma_noise != 0 else '')
-    plt.title('Error in matrix norm vs number of observables' + title)
+    plt.legend(legend_labels, loc='lower left')
+    if title is not None:
+        title = (' for ' + title
+                 if title else '') + (f' with noise $\sigma = {sigma_noise}$'
+                                      if sigma_noise != 0 else '')
+        plt.title('Error in matrix norm vs number of observables' + title)
     print('The number of observables of each method is:')
 
     for i in range(len(observables_names)):
         print('Number of ', observables_names[i], ':', observables_numbers)
         print('Theoretical error is:', theoretical_errors)
-
+    if path is not None:
+        plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
+                    '.png',
+                    bbox_inches='tight')
     plt.show(block=block)
+    #Saves the plot
 
 
 #In the notation we use in our new paper:
