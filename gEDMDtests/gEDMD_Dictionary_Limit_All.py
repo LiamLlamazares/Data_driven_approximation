@@ -20,13 +20,13 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
 plt.ion()
-M_exact = 1000
-M_approx = 100
+M_exact = 10**6
+M_approx = 10**5
 min_number_of_observables = 2
 boxes1 = 2
 boxes2 = 2
 boxes = np.array([boxes1, boxes2])
-max_number_of_observables = 10
+max_number_of_observables = 10**3
 
 number_of_runs = 50
 number_of_batches = 5
