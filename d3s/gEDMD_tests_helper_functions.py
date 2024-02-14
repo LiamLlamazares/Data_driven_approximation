@@ -524,7 +524,8 @@ def plot_data_limit(paths,
     ]
     fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
     ax_legend.axis('off')
-    fig_legend.savefig('legend.pdf', bbox_inches='tight')
+    fig_legend.savefig('gEDMDtests/Simulation_figures/Data_Limit/legend.pdf',
+                       bbox_inches='tight')
 
     for path in paths:
         #Extracts the data for each plot
@@ -592,7 +593,9 @@ def plot_dictionary_limit(paths,
     ]
     fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
     ax_legend.axis('off')
-    fig_legend.savefig('legend.pdf', bbox_inches='tight')
+    fig_legend.savefig(
+        'gEDMDtests/Simulation_figures/Dictionary_Limit/legend.pdf',
+        bbox_inches='tight')
 
     for path in paths:
         #Extracts the data for each plot

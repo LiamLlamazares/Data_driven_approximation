@@ -169,4 +169,3 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           M_approx=M_approx,
                                           prob=0.5,
                                           path='OU_EDMD')
-paths = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
