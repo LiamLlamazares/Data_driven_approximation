@@ -515,7 +515,7 @@ def plot_data_limit(paths,
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
     power_labels = [f'$M^{{{power}}}$' for power in powers]
-    legend_labels = observables_error_labels + power_labels + CI_labels
+    legend_labels = observables_error_labels + CI_labels + power_labels
 
     for path in paths:
         #Extracts the data for each plot
@@ -556,10 +556,7 @@ def plot_data_limit(paths,
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
                 loc='lower left',
-                fontsize=font_size - 2)
-            # #Exports just the legend but not the plot
-            # plt.savefig('gEDMDtests/Simulation_figures/Data_Limit/legend.pdf',
-            #             bbox_inches='tight')
+                fontsize=font_size)
             export_legend(
                 legend,
                 filename='gEDMDtests/Simulation_figures/Data_Limit/legend.pdf')
@@ -585,21 +582,7 @@ def plot_dictionary_limit(paths,
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
     theoretical_labels = [f'Theoretical {name}' for name in observables_names]
-    legend_labels = observables_error_labels + CI_labels + theoretical_labels
-
-    # Create a separate figure for the legend
-    fig_legend = plt.figure(figsize=(3, 3))
-    ax_legend = fig_legend.add_subplot(111)
-    # Create dummy lines for the legend
-    lines = [
-        ax_legend.plot([], [], label=label)[0]
-        for i, label in enumerate(legend_labels)
-    ]
-    fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
-    ax_legend.axis('off')
-    fig_legend.savefig(
-        'gEDMDtests/Simulation_figures/Dictionary_Limit/legend.pdf',
-        bbox_inches='tight')
+    legend_labels = observables_error_labels + theoretical_labels + CI_labels
 
     for path in paths:
         #Extracts the data for each plot
@@ -628,6 +611,17 @@ def plot_dictionary_limit(paths,
         plt.ylabel(ylabel, fontsize=font_size)
         plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
         plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
+        #Gets the legend for first plot to export and then removes it
+        if path == paths[0]:
+            legend = plt.legend(
+                legend_labels,  # we place the legend on bottom left of the plot
+                loc='lower left',
+                fontsize=font_size)
+            export_legend(
+                legend,
+                filename=
+                'gEDMDtests/Simulation_figures/Dictionary_Limit/legend.pdf')
+            plt.legend().remove()
         plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
                     '.pdf',
                     bbox_inches='tight')
