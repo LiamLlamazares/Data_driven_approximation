@@ -51,72 +51,37 @@ psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
-X = Omega.rand(2)
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma_noise=0,
-    # title='Simple deterministic system gEDMD',
-    operator='K',
-    block=False,
-    path='ODE')
 
-
-# ########################################
-#Double well system
-# ########################################
-def b(x):
-    return np.vstack((-4 * x[0, :]**3 + 4 * x[0, :], -2 * x[1, :]))
-
-
-def sigma(x):
-    n = x.shape[1]
-    y = np.zeros((2, 2, n))
-    y[0, 0, :] = 0.7
-    y[0, 1, :] = x[0, :]
-    y[1, 1, :] = 0.5
-    return y
-
-
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    # title='Double well system gEDMD',
-    block=False,
-    path='Double_well')
-
-f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    f=f,
-    sigma=sigma,
-    # title='Double well system EDMD',
-    block=False,
-    path='Double_well_EDMD')
-
+# sigma_noise = 0.001
+# gedmd_helper.plot_errors_data_limit(
+#     M,
+#     min_number_of_data_points,
+#     confidence_level,
+#     number_of_runs,
+#     number_of_batches,
+#     observables_list,
+#     observables_names,
+#     Omega,
+#     b,
+#     sigma_noise=sigma_noise,
+#     # title='Simple deterministic system gEDMD',
+#     block=False,
+#     path='ODE_sigma_noise =' + str(sigma_noise))
+# sigma_noise = 0.1
+# gedmd_helper.plot_errors_data_limit(
+#     M,
+#     min_number_of_data_points,
+#     confidence_level,
+#     number_of_runs,
+#     number_of_batches,
+#     observables_list,
+#     observables_names,
+#     Omega,
+#     b,
+#     sigma_noise=sigma_noise,
+#     # title='Simple deterministic system gEDMD',
+#     block=False,
+#     path='ODE_sigma_noise =' + str(sigma_noise))
 # ########################################
 #OU system
 # ########################################
@@ -144,23 +109,10 @@ psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
-#gEDMD Koopman operator
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    #  title='OU system gEDMD',
-    operator='K',
-    block=False,
-    path='OU')
+
 # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
+
+sigma_noise = 0.001
 gedmd_helper.plot_errors_data_limit(
     M,
     min_number_of_data_points,
@@ -171,15 +123,12 @@ gedmd_helper.plot_errors_data_limit(
     observables_names,
     Omega,
     b,
+    sigma_noise=sigma_noise,
     sigma=sigma,
     # title='OU system gEDMD',
-    operator='P',
     block=False,
-    path='OU_PF')
-
-h = 0.001  #EDMD
-tau = 0.5
-f = systems.OrnsteinUhlenbeck(h, int(tau / h))
+    path='OU_sigma_noise =' + str(sigma_noise))
+sigma_noise = 0.01
 gedmd_helper.plot_errors_data_limit(
     M,
     min_number_of_data_points,
@@ -190,8 +139,24 @@ gedmd_helper.plot_errors_data_limit(
     observables_names,
     Omega,
     b,
+    sigma_noise=sigma_noise,
     sigma=sigma,
-    f=f,
-    # title='OU system EDMD',
-    block=True,
-    path='OU_EDMD')
+    # title='OU system gEDMD',
+    block=False,
+    path='OU_sigma_noise =' + str(sigma_noise))
+sigma_noise = 0.1
+gedmd_helper.plot_errors_data_limit(
+    M,
+    min_number_of_data_points,
+    confidence_level,
+    number_of_runs,
+    number_of_batches,
+    observables_list,
+    observables_names,
+    Omega,
+    b,
+    sigma_noise=sigma_noise,
+    sigma=sigma,
+    # title='OU system gEDMD',
+    block=False,
+    path='OU_sigma_noise =' + str(sigma_noise))

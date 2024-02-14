@@ -321,7 +321,7 @@ gedmd_helper.plot_errors_data_limit(M,
 
     if path is not None:
         plt.savefig('gEDMDtests/Simulation_figures/Data_Limit/' + path +
-                    '.png',
+                    '.pdf',
                     bbox_inches='tight')
     plt.show(block=block)
 
@@ -585,7 +585,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
         print('Theoretical error is:', theoretical_errors)
     if path is not None:
         plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
-                    '.png',
+                    '.pdf',
                     bbox_inches='tight')
     plt.show(block=block)
     #Saves the plot
