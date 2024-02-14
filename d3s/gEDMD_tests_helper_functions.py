@@ -263,12 +263,9 @@ gedmd_helper.plot_errors_data_limit(M,
     matrix_errors_confidence_interval = t_value * matrix_errors_std / np.sqrt(
         number_of_batches)
 
-    #error plots
-    # ... rest of your code ...
-
     # error plots
     plt.figure()
-    plt.loglog(data_points_number, matrix_errors_average)
+    plt.loglog(data_points_number, matrix_errors_average, marker='o')
 
     # plot confidence intervals as shaded regions
     lower_bound = matrix_errors_average - matrix_errors_confidence_interval
@@ -284,7 +281,6 @@ gedmd_helper.plot_errors_data_limit(M,
                          upper_bound[:, i],
                          color=colours[i % len(colours)],
                          alpha=0.2)
-
     # slopes
     plt.loglog(
         data_points_number,
@@ -324,6 +320,16 @@ gedmd_helper.plot_errors_data_limit(M,
                     '.pdf',
                     bbox_inches='tight')
     plt.show(block=block)
+    #Saves the data
+    data = {
+        'data_points_number': data_points_number,
+        'matrix_errors_average': matrix_errors_average,
+        'matrix_errors_confidence_interval': matrix_errors_confidence_interval,
+        'observables_names': observables_names,
+        'observables_list': observables_list,
+        'title': path
+    }
+    np.savez('gEDMDtests/Simulation_data/Data_Limit/' + path + '.npz', **data)
 
 
 def plot_errors_dictionary_limit(min_number_of_observables,
