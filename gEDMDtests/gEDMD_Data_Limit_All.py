@@ -21,7 +21,7 @@ import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 1000
+M = 2000
 number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
