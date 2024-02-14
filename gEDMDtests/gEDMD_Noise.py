@@ -21,7 +21,7 @@ import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 1000000
+M = 10**6
 number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
@@ -52,39 +52,48 @@ variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
 
-# sigma_noise = 0.001
-# gedmd_helper.plot_errors_data_limit(
-#     M,
-#     min_number_of_data_points,
-#     confidence_level,
-#     number_of_runs,
-#     number_of_batches,
-#     observables_list,
-#     observables_names,
-#     Omega,
-#     b,
-#     sigma_noise=sigma_noise,
-#     # title='Simple deterministic system gEDMD',
-#     block=False,
-#     path='ODE_sigma_noise =' + str(sigma_noise))
-# sigma_noise = 0.1
-# gedmd_helper.plot_errors_data_limit(
-#     M,
-#     min_number_of_data_points,
-#     confidence_level,
-#     number_of_runs,
-#     number_of_batches,
-#     observables_list,
-#     observables_names,
-#     Omega,
-#     b,
-#     sigma_noise=sigma_noise,
-#     # title='Simple deterministic system gEDMD',
-#     block=False,
-#     path='ODE_sigma_noise =' + str(sigma_noise))
-# ########################################
-#OU system
-# ########################################
+sigma_noise = 0.001
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    path='ODE_sigma_noise =' +
+                                    str(sigma_noise))
+sigma_noise = 0.01
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    path='ODE_sigma_noise =' +
+                                    str(sigma_noise))
+sigma_noise = 0.1
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    path='ODE_sigma_noise =' +
+                                    str(sigma_noise))
+########################################
+# OU system
+########################################
 
 # define domain
 bounds = np.array([[-2, 2]])
@@ -113,50 +122,41 @@ observables_list = [psi_m, psi_g]
 # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
 
 sigma_noise = 0.001
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma_noise=sigma_noise,
-    sigma=sigma,
-    # title='OU system gEDMD',
-    block=False,
-    path='OU_sigma_noise =' + str(sigma_noise))
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_sigma_noise =' + str(sigma_noise))
 sigma_noise = 0.01
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma_noise=sigma_noise,
-    sigma=sigma,
-    # title='OU system gEDMD',
-    block=False,
-    path='OU_sigma_noise =' + str(sigma_noise))
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_sigma_noise =' + str(sigma_noise))
 sigma_noise = 0.1
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma_noise=sigma_noise,
-    sigma=sigma,
-    # title='OU system gEDMD',
-    block=False,
-    path='OU_sigma_noise =' + str(sigma_noise))
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_sigma_noise =' + str(sigma_noise))

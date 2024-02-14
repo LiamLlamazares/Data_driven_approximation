@@ -611,6 +611,7 @@ def plot_dictionary_limit(paths,
         # Plotting data
         plt.figure()
         plt.loglog(observables_numbers, matrix_errors_average, marker='o')
+        plt.loglog(observables_numbers, theoretical_errors, marker='o')
 
         for i in range(lower_bound.shape[1]):
             plt.fill_between(observables_numbers,
