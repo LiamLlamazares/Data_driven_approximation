@@ -10,6 +10,8 @@ import scipy.stats as stats
 #and the domain Omega (by default a square [-1,1]^2)
 import d3s.domain as domain
 import d3s.observables as observables
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 
 def gedmdMatrices(X,
@@ -509,23 +511,11 @@ def plot_data_limit(paths,
                         'pink', 'gray', 'olive', 'cyan'
                     ]):
 
+    # Create legend labels
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
     power_labels = [f'$M^{{{power}}}$' for power in powers]
-    legend_labels = observables_error_labels + CI_labels + power_labels
-
-    # Create a separate figure for the legend
-    fig_legend = plt.figure(figsize=(3, 3))
-    ax_legend = fig_legend.add_subplot(111)
-    # Create dummy lines for the legend
-    lines = [
-        ax_legend.plot([], [], color=colours[i % len(colours)], label=label)[0]
-        for i, label in enumerate(legend_labels)
-    ]
-    fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
-    ax_legend.axis('off')
-    fig_legend.savefig('gEDMDtests/Simulation_figures/Data_Limit/legend.pdf',
-                       bbox_inches='tight')
+    legend_labels = observables_error_labels + power_labels + CI_labels
 
     for path in paths:
         #Extracts the data for each plot
@@ -547,19 +537,33 @@ def plot_data_limit(paths,
                              lower_bound[:, i],
                              upper_bound[:, i],
                              color=colours[i % len(colours)],
-                             alpha=0.2)
+                             alpha=0.2,
+                             label=CI_labels[i])
 
-        for power in powers:
-            plt.loglog(
-                data_points_number,
-                np.power(np.float64(data_points_number), power) *
-                matrix_errors_average[0, 0] /
-                np.power(np.float64(data_points_number[0]), power))
+        for i, power in enumerate(powers):
+            plt.loglog(data_points_number,
+                       np.power(np.float64(data_points_number), power) *
+                       matrix_errors_average[0, 0] /
+                       np.power(np.float64(data_points_number[0]), power),
+                       label=power_labels[i])
 
         plt.xlabel(xlabel, fontsize=font_size)
         plt.ylabel(ylabel, fontsize=font_size)
         plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
         plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
+        #Gets the legend for first plot to export and then removes it
+        if path == paths[0]:
+            legend = plt.legend(
+                legend_labels,  # we place the legend on bottom left of the plot
+                loc='lower left',
+                fontsize=font_size - 2)
+            # #Exports just the legend but not the plot
+            # plt.savefig('gEDMDtests/Simulation_figures/Data_Limit/legend.pdf',
+            #             bbox_inches='tight')
+            export_legend(
+                legend,
+                filename='gEDMDtests/Simulation_figures/Data_Limit/legend.pdf')
+            plt.legend().remove()
         plt.savefig('gEDMDtests/Simulation_figures/Data_Limit/' + path +
                     '.pdf',
                     bbox_inches='tight')
@@ -588,7 +592,7 @@ def plot_dictionary_limit(paths,
     ax_legend = fig_legend.add_subplot(111)
     # Create dummy lines for the legend
     lines = [
-        ax_legend.plot([], [], color=colours[i % len(colours)], label=label)[0]
+        ax_legend.plot([], [], label=label)[0]
         for i, label in enumerate(legend_labels)
     ]
     fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
@@ -638,3 +642,35 @@ def plot_dictionary_limit(paths,
 # A = operator matrix = A
 # C0 = gram matrix = G
 # C1 = stiffness matrix = C
+def export_legend(legend, filename="legend.png", expand=[-1, -1, 1, 1]):
+    # Create a new figure for the legend
+    legend_fig = plt.figure()
+    legend_ax = legend_fig.add_subplot(111)
+    legend_ax.axis('off')
+    legend_ax.set_frame_on(False)  # No frame around the empty axis
+
+    # Get the legend's handles and labels from the existing legend
+    handles, labels = legend.legendHandles, [
+        text.get_text() for text in legend.get_texts()
+    ]
+
+    # Create a new legend on the new figure using the handles and labels
+    new_legend = legend_ax.legend(handles, labels, loc='center', frameon=True)
+    new_legend.set_frame_on(True)  # Opaque background in the legend
+
+    # Adjust the legend's appearance
+    for text in new_legend.get_texts():
+        text.set_color(
+            "black")  # Ensure text is black (or any other color you prefer)
+
+    # Set the legend's canvas as the figure's canvas
+    legend_fig.canvas.draw()
+
+    # Calculate the bounding box of the legend
+    bbox = new_legend.get_window_extent().transformed(
+        legend_fig.dpi_scale_trans.inverted())
+    bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
+
+    # Save the new figure with the legend
+    legend_fig.savefig(filename, bbox_inches=bbox, pad_inches=0)
+    plt.close(legend_fig)
