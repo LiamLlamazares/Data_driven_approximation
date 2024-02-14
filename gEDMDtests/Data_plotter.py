@@ -15,17 +15,25 @@ import d3s.observables as observables
 import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
-paths = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_PF', 'OU_EDMD']
+paths_data = [
+    'ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_PF', 'OU_EDMD'
+]
 powers = [-0.5, -1]
-observables_names = ['Monomials', 'Gaussians']
-gedmd_helper.plot_data(paths,
-                       observables_names,
-                       powers,
-                       xlabel='$M$',
-                       ylabel='$\epsilon$',
-                       font_size=15,
-                       font_size_ticks=12,
-                       colours=[
-                           'blue', 'orange', 'green', 'red', 'purple', 'brown',
-                           'pink', 'gray', 'olive', 'cyan'
-                       ])
+observables_names_data = ['Monomials', 'Gaussians']
+font_size = 15
+font_size_ticks = 12
+gedmd_helper.plot_data_limit(paths_data,
+                             observables_names_data,
+                             powers,
+                             xlabel='$M$',
+                             ylabel='$\epsilon$',
+                             font_size=font_size,
+                             font_size_ticks=font_size_ticks)
+paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
+observables_names_dict = ['Gaussians']
+gedmd_helper.plot_dictionary_limit(paths_dict,
+                                   observables_names_dict,
+                                   xlabel='$N$',
+                                   ylabel='$\epsilon$',
+                                   font_size=font_size,
+                                   font_size_ticks=font_size_ticks)

@@ -21,7 +21,7 @@ import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 2000
+M = 10**6
 number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
@@ -65,7 +65,6 @@ gedmd_helper.plot_errors_data_limit(
     sigma_noise=0,
     # title='Simple deterministic system gEDMD',
     operator='K',
-    block=False,
     path='ODE')
 
 
@@ -85,37 +84,31 @@ def sigma(x):
     return y
 
 
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    # title='Double well system gEDMD',
-    block=False,
-    path='Double_well')
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    path='Double_well')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    f=f,
-    sigma=sigma,
-    # title='Double well system EDMD',
-    block=False,
-    path='Double_well_EDMD')
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    f=f,
+                                    sigma=sigma,
+                                    path='Double_well_EDMD')
 
 # ########################################
 #OU system
@@ -145,53 +138,44 @@ variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
 #gEDMD Koopman operator
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    #  title='OU system gEDMD',
-    operator='K',
-    block=False,
-    path='OU')
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    operator='K',
+                                    path='OU')
 # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    # title='OU system gEDMD',
-    operator='P',
-    block=False,
-    path='OU_PF')
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    operator='P',
+                                    path='OU_PF')
 
 h = 0.001  #EDMD
 tau = 0.5
 f = systems.OrnsteinUhlenbeck(h, int(tau / h))
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    f=f,
-    # title='OU system EDMD',
-    block=True,
-    path='OU_EDMD')
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    f=f,
+                                    path='OU_EDMD')

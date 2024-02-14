@@ -116,10 +116,6 @@ def plot_errors_data_limit(
     sigma=None,
     f=None,
     sigma_noise=0,
-    block=True,
-    title=None,
-    power_1=-1,
-    power_2=-0.5,
     operator='K',
     path=None,
 ):
@@ -196,7 +192,7 @@ gedmd_helper.plot_errors_data_limit(M,
         min_number_of_data_points * 2**x
         for x in range(0, number_of_loops_data_points)
     ]
-    print(title, ' max data_points_number = ',
+    print(path, ' max data_points_number = ',
           min_number_of_data_points * 2**number_of_loops_data_points,
           'number_of_loops = ', number_of_loops_data_points)
     types_of_observables_number = len(observables_list)
@@ -263,59 +259,9 @@ gedmd_helper.plot_errors_data_limit(M,
     matrix_errors_confidence_interval = t_value * matrix_errors_std / np.sqrt(
         number_of_batches)
 
-    # error plots
-    plt.figure()
-    plt.loglog(data_points_number, matrix_errors_average, marker='o')
-
     # plot confidence intervals as shaded regions
     lower_bound = matrix_errors_average - matrix_errors_confidence_interval
     upper_bound = matrix_errors_average + matrix_errors_confidence_interval
-    colours = [
-        'blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray',
-        'olive', 'cyan'
-    ]
-
-    for i in range(lower_bound.shape[1]):
-        plt.fill_between(data_points_number,
-                         lower_bound[:, i],
-                         upper_bound[:, i],
-                         color=colours[i % len(colours)],
-                         alpha=0.2)
-    # slopes
-    plt.loglog(
-        data_points_number,
-        np.power(np.float64(data_points_number), power_1) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(data_points_number[0]), power_1))
-    plt.loglog(
-        data_points_number,
-        np.power(np.float64(data_points_number), power_2) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(data_points_number[0]), power_2))
-    plt.xlabel(f'$M$')
-    plt.ylabel(f'$\epsilon$')
-
-    # plot legends
-    for type in range(types_of_observables_number):
-        plt.legend(observables_names[type], loc='lower left')
-
-    observables_error_labels = [f'{name} error' for name in observables_names]
-    CI_labels = [f'CI {name}' for name in observables_names]
-    legend_labels = observables_error_labels + CI_labels + [
-        f'$M^{{{power_1}}}$', f'$M^{{{power_2}}}$'
-    ]
-    plt.legend(legend_labels, loc='lower left')
-    if title is not None:
-        title = (' for ' + title
-                 if title else '') + (f' with noise $\sigma = {sigma_noise}$'
-                                      if sigma_noise != 0 else '')
-        plt.title('Error in matrix norm vs number of data points' + title)
-    print('The number of observables of each method is:')
-
-    for i in range(len(observables_list)):
-        print(observables_names[i], ':', observables_list[i].length())
-
-    plt.show(block=block)
     #Saves the data
     data = {
         'data_points_number': data_points_number,
@@ -342,13 +288,9 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  operator='K',
                                  gamma=1,
                                  multiplier=1.3,
-                                 block=True,
                                  M_exact=None,
                                  M_approx=None,
                                  prob=0.5,
-                                 title=None,
-                                 power_1=0.5,
-                                 power_2=0.25,
                                  path=None):
     """
     Plots the matrix error for different number of dictionary elements and observables.
@@ -416,11 +358,9 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                     Omega,
                                     b,
                                     f=None,
-                                    block=True,
                                     M_exact = M_exact,
                                     M = M_approx,
-                                    p =0.9,
-                                    title='Simple deterministic system')
+                                    p =0.9)
     """
     p = 0  #Monomials degree
     while int((p + 1) * (p + 2) / 2) < max_number_of_observables:
@@ -440,7 +380,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
 
     number_of_loops_observables = len(observables_numbers)
 
-    print(title, ' max observables = ', observables_numbers[-1],
+    print(path, ' max observables = ', observables_numbers[-1],
           'number_of_loops = ', number_of_loops_observables)
     types_of_observables_number = len(observables_names)
     matrix_errors = np.zeros((number_of_loops_observables,
@@ -495,8 +435,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                     A_exact - A_approx, ord=2) / A_exact_matrix_norm
 
     matrix_errors_average = np.mean(matrix_errors, axis=2)
-    #calculate confidence intervals for the average error of the matrices (95% confidence) for each number of data points
-    #first we divide the error data into number_of_batches batches
+    #calculate confidence intervals for the average error of the matrices (95% confidence) for each number of data points first we divide the error data into number_of_batches batches
     batch_size = int(np.floor(
         number_of_runs / number_of_batches))  #number of runs in each batch
     #Gives error if batch size is 0
@@ -521,24 +460,10 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
     matrix_errors_confidence_interval = t_value * matrix_errors_std / np.sqrt(
         number_of_batches)
 
-    # error plots
-    plt.figure()
-    plt.loglog(observables_numbers, matrix_errors_average)
-
     # plot confidence intervals as shaded regions
     lower_bound = matrix_errors_average - matrix_errors_confidence_interval
     upper_bound = matrix_errors_average + matrix_errors_confidence_interval
-    colours = [
-        'blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray',
-        'olive', 'cyan'
-    ]
 
-    for i in range(lower_bound.shape[1]):
-        plt.fill_between(observables_numbers,
-                         lower_bound[:, i],
-                         upper_bound[:, i],
-                         color=colours[i % len(colours)],
-                         alpha=0.2)
     #Theoretical error starts from the average error of the first batch
     for i in range(types_of_observables_number):
         theoretical_errors[:,
@@ -547,63 +472,43 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                                        0,
                                                        i] - theoretical_errors[
                                                            0, i]
-    plt.loglog(observables_numbers, np.minimum(theoretical_errors, 1))
 
-    # slopes
-    plt.loglog(
-        observables_numbers,
-        np.power(np.float64(observables_numbers), power_1) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(observables_numbers[0]), power_1))
-    plt.loglog(
-        observables_numbers,
-        np.power(np.float64(observables_numbers), power_2) *
-        matrix_errors_average[0, 0] /
-        np.power(np.float64(observables_numbers[0]), power_2))
-    plt.xlabel(f'$N$')
-    plt.ylabel(f'$\epsilon$')
-
-    # plot legends
-    observables_error_labels = [f'{name} error' for name in observables_names]
-    CI_labels = [f'CI {name}' for name in observables_names]
-    theoretical_labels = [f'Theoretical {name}' for name in observables_names]
-    legend_labels = observables_error_labels + CI_labels + theoretical_labels + [
-        f'$M^{{{power_1}}}$', f'$M^{{{power_2}}}$'
-    ]
-
-    plt.legend(legend_labels, loc='lower left')
-    if title is not None:
-        title = (' for ' + title
-                 if title else '') + (f' with noise $\sigma = {sigma_noise}$'
-                                      if sigma_noise != 0 else '')
-        plt.title('Error in matrix norm vs number of observables' + title)
+    if path is not None:
+        title = (' for ' + path
+                 if path else '') + (f' with noise $\sigma = {sigma_noise}$'
+                                     if sigma_noise != 0 else '')
     print('The number of observables of each method is:')
 
     for i in range(len(observables_names)):
         print('Number of ', observables_names[i], ':', observables_numbers)
         print('Theoretical error is:', theoretical_errors)
-    if path is not None:
-        plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
-                    '.pdf',
-                    bbox_inches='tight')
-    plt.show(block=block)
-    #Saves the plot
+
+    #Saves the data
+    data = {
+        'observables_numbers': observables_numbers,
+        'matrix_errors_average': matrix_errors_average,
+        'matrix_errors_confidence_interval': matrix_errors_confidence_interval,
+        'theoretical_errors': theoretical_errors,
+        'observables_names': observables_names,
+        'title': path
+    }
+    np.savez('gEDMDtests/Simulation_data/Dictionary_Limit/' + path + '.npz',
+             **data)
 
 
-def plot_data(paths,
-              observables_names,
-              powers,
-              xlabel='$M$',
-              ylabel='$\epsilon$',
-              font_size=12,
-              font_size_ticks=10,
-              block=False,
-              colours=[
-                  'blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink',
-                  'gray', 'olive', 'cyan'
-              ]):
+def plot_data_limit(paths,
+                    observables_names,
+                    powers,
+                    xlabel='$M$',
+                    ylabel='$\epsilon$',
+                    font_size=12,
+                    font_size_ticks=10,
+                    block=False,
+                    colours=[
+                        'blue', 'orange', 'green', 'red', 'purple', 'brown',
+                        'pink', 'gray', 'olive', 'cyan'
+                    ]):
 
-    types_of_observables_number = len(observables_names)
     observables_error_labels = [f'{name} error' for name in observables_names]
     CI_labels = [f'CI {name}' for name in observables_names]
     power_labels = [f'$M^{{{power}}}$' for power in powers]
@@ -659,6 +564,66 @@ def plot_data(paths,
                     bbox_inches='tight')
         plt.close(
         )  # Close the plot to prevent it from displaying in the notebook
+
+
+def plot_dictionary_limit(paths,
+                          observables_names,
+                          xlabel='$N$',
+                          ylabel='$\epsilon$',
+                          font_size=12,
+                          font_size_ticks=10,
+                          colours=[
+                              'blue', 'orange', 'green', 'red', 'purple',
+                              'brown', 'pink', 'gray', 'olive', 'cyan'
+                          ]):
+
+    observables_error_labels = [f'{name} error' for name in observables_names]
+    CI_labels = [f'CI {name}' for name in observables_names]
+    theoretical_labels = [f'Theoretical {name}' for name in observables_names]
+    legend_labels = observables_error_labels + CI_labels + theoretical_labels
+
+    # Create a separate figure for the legend
+    fig_legend = plt.figure(figsize=(3, 3))
+    ax_legend = fig_legend.add_subplot(111)
+    # Create dummy lines for the legend
+    lines = [
+        ax_legend.plot([], [], color=colours[i % len(colours)], label=label)[0]
+        for i, label in enumerate(legend_labels)
+    ]
+    fig_legend.legend(lines, legend_labels, loc='center', fontsize=font_size)
+    ax_legend.axis('off')
+    fig_legend.savefig('legend.pdf', bbox_inches='tight')
+
+    for path in paths:
+        #Extracts the data for each plot
+        data = np.load('gEDMDtests/Simulation_data/Dictionary_Limit/' + path +
+                       '.npz')
+        observables_numbers = data['observables_numbers']
+        matrix_errors_average = data['matrix_errors_average']
+        matrix_errors_confidence_interval = data[
+            'matrix_errors_confidence_interval']
+        lower_bound = matrix_errors_average - matrix_errors_confidence_interval
+        upper_bound = matrix_errors_average + matrix_errors_confidence_interval
+        theoretical_errors = data['theoretical_errors']
+        # Plotting data
+        plt.figure()
+        plt.loglog(observables_numbers, matrix_errors_average, marker='o')
+
+        for i in range(lower_bound.shape[1]):
+            plt.fill_between(observables_numbers,
+                             lower_bound[:, i],
+                             upper_bound[:, i],
+                             color=colours[i % len(colours)],
+                             alpha=0.2)
+
+        plt.xlabel(xlabel, fontsize=font_size)
+        plt.ylabel(ylabel, fontsize=font_size)
+        plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
+        plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
+        plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
+                    '.pdf',
+                    bbox_inches='tight')
+        plt.close()  #
 
 
 #In the notation we use in our new paper:
