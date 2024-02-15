@@ -51,20 +51,21 @@ def b(x):
 
 #define observables
 observables_names = ['Gaussians']
-gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-                                          max_number_of_observables,
-                                          confidence_level,
-                                          number_of_runs,
-                                          number_of_batches,
-                                          observables_names,
-                                          Omega,
-                                          b,
-                                          sigma=None,
-                                          sigma_noise=0.1,
-                                          M_exact=M_exact,
-                                          M_approx=M_approx,
-                                          prob=0.5,
-                                          path='ODE')
+
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           sigma_noise=0.1,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='ODE')
 
 
 # ########################################

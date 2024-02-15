@@ -636,12 +636,15 @@ def plot_dictionary_limit(paths,
 # A = operator matrix = A
 # C0 = gram matrix = G
 # C1 = stiffness matrix = C
-def export_legend(legend, filename="legend.png", expand=[-1, -1, 1, 1]):
+
+
+def export_legend(legend, filename="legend.png", pad_inches=0.2):
     # Create a new figure for the legend
-    legend_fig = plt.figure()
+    legend_fig = plt.figure(
+        figsize=(2, 1))  # You may need to adjust these dimensions
     legend_ax = legend_fig.add_subplot(111)
     legend_ax.axis('off')
-    legend_ax.set_frame_on(False)  # No frame around the empty axis
+    legend_ax.set_frame_on(False)
 
     # Get the legend's handles and labels from the existing legend
     handles, labels = legend.legendHandles, [
@@ -657,14 +660,19 @@ def export_legend(legend, filename="legend.png", expand=[-1, -1, 1, 1]):
         text.set_color(
             "black")  # Ensure text is black (or any other color you prefer)
 
-    # Set the legend's canvas as the figure's canvas
+    # Draw the legend to the figure
     legend_fig.canvas.draw()
 
-    # Calculate the bounding box of the legend
-    bbox = new_legend.get_window_extent().transformed(
+    # Calculate the bounding box of the legend and adjust the figure size accordingly
+    bbox_inches = new_legend.get_window_extent().transformed(
         legend_fig.dpi_scale_trans.inverted())
-    bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
+    width, height = bbox_inches.width, bbox_inches.height
+    legend_fig.set_size_inches(width + pad_inches, height + pad_inches)
+    legend_ax.set_xlim(
+        -pad_inches / 2, width +
+        pad_inches / 2)  # Adjust the axis limits to match the new figure size
+    legend_ax.set_ylim(-pad_inches / 2, height + pad_inches / 2)
 
     # Save the new figure with the legend
-    legend_fig.savefig(filename, bbox_inches=bbox, pad_inches=0)
+    legend_fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(legend_fig)

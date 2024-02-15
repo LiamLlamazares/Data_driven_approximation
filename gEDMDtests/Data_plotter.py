@@ -20,8 +20,8 @@ paths_data = [
 ]
 powers = [-0.5, -1]
 observables_names_data = ['Monomials', 'Gaussians']
-font_size = 15
-font_size_ticks = 12
+font_size = 30
+font_size_ticks = 30
 gedmd_helper.plot_data_limit(paths_data,
                              observables_names_data,
                              powers,
@@ -38,8 +38,15 @@ gedmd_helper.plot_dictionary_limit(paths_dict,
                                    font_size=font_size,
                                    font_size_ticks=font_size_ticks)
 paths_noise = [
-    'ODE_sigma_noise =0.001', 'ODE_sigma_noise =0.01', 'ODE_sigma_noise =0.1',
-    'OU_sigma_noise =0.001', 'OU_sigma_noise =0.01', 'OU_sigma_noise =0.1'
+    'ODE_sigma_noise =0.001',
+    'ODE_sigma_noise =0.01',
+    'ODE_sigma_noise =0.1',
+    'OU_PF_sigma_noise =0.001',
+    'OU_PF_sigma_noise =0.01',
+    'OU_PF_sigma_noise =0.1',
+    'OU_sigma_noise =0.001',
+    'OU_sigma_noise =0.01',
+    'OU_sigma_noise =0.1',
 ]
 gedmd_helper.plot_data_limit(paths_noise,
                              observables_names_data,
