@@ -20,15 +20,15 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
 plt.ion()
-M_exact = 10**6
-M_approx = 10**5
+M_exact = 10**5
+M_approx = 10**4
 min_number_of_observables = 2
 boxes1 = 2
 boxes2 = 2
 boxes = np.array([boxes1, boxes2])
-max_number_of_observables = 10**3
+max_number_of_observables = 8 * 10**2
 
-number_of_runs = 50
+number_of_runs = 20
 number_of_batches = 5
 confidence_level = 0.95
 number_of_monomials = 8
@@ -52,20 +52,20 @@ def b(x):
 #define observables
 observables_names = ['Gaussians']
 
-# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-#                                           max_number_of_observables,
-#                                           confidence_level,
-#                                           number_of_runs,
-#                                           number_of_batches,
-#                                           observables_names,
-#                                           Omega,
-#                                           b,
-#                                           sigma=None,
-#                                           sigma_noise=0.1,
-#                                           M_exact=M_exact,
-#                                           M_approx=M_approx,
-#                                           prob=0.5,
-#                                           path='ODE')
+gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+                                          max_number_of_observables,
+                                          confidence_level,
+                                          number_of_runs,
+                                          number_of_batches,
+                                          observables_names,
+                                          Omega,
+                                          b,
+                                          sigma=None,
+                                          sigma_noise=0.1,
+                                          M_exact=M_exact,
+                                          M_approx=M_approx,
+                                          prob=0.5,
+                                          path='ODE')
 
 
 # ########################################

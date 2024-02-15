@@ -289,7 +289,7 @@ def plot_errors_dictionary_limit(min_number_of_observables,
                                  sigma_noise=0,
                                  operator='K',
                                  gamma=1,
-                                 multiplier=1.3,
+                                 multiplier=1.2,
                                  M_exact=None,
                                  M_approx=None,
                                  prob=0.5,
@@ -421,7 +421,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                                                     (1 - prob)) /
                 M_exact) / A_exact_matrix_norm
 
-            print('loops completed = ', i, '/', number_of_loops_observables,
+            print('loop executed = ', i + 1, '/', number_of_loops_observables,
                   "type = ", observables_names[type])
             for m in range(number_of_runs):
                 X_approx = Omega.rand(M_approx)
@@ -468,12 +468,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
 
     #Theoretical error starts from the average error of the first batch
     for i in range(types_of_observables_number):
-        theoretical_errors[:,
-                           i] = theoretical_errors[:,
-                                                   i] + matrix_errors_average[
-                                                       0,
-                                                       i] - theoretical_errors[
-                                                           0, i]
+        theoretical_errors[:, i] = theoretical_errors[:, i]
 
     if path is not None:
         title = (' for ' + path
@@ -589,12 +584,16 @@ def plot_dictionary_limit(paths,
         data = np.load('gEDMDtests/Simulation_data/Dictionary_Limit/' + path +
                        '.npz')
         observables_numbers = data['observables_numbers']
-        matrix_errors_average = data['matrix_errors_average']
+        matrix_errors_average = np.minimum(data['matrix_errors_average'], 1)
         matrix_errors_confidence_interval = data[
             'matrix_errors_confidence_interval']
         lower_bound = matrix_errors_average - matrix_errors_confidence_interval
         upper_bound = matrix_errors_average + matrix_errors_confidence_interval
         theoretical_errors = data['theoretical_errors']
+        for i in range(lower_bound.shape[1]):
+            theoretical_errors[:, i] = np.minimum(
+                theoretical_errors[:, i] * matrix_errors_average[0, i] /
+                theoretical_errors[0, i], 1)
         # Plotting data
         plt.figure()
         plt.loglog(observables_numbers, matrix_errors_average, marker='o')
