@@ -32,7 +32,7 @@ def gedmdMatrices(X,
     evs (int, optional): Number of eigenvalues/eigenfunctions to be computed. Defaults to 8.
     Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
     sigma (function, optional): The diffusion function. Only used for gEDMD in stochastic systems. Defaults to None.
-    f (function, optional): The forward operator. Only used for EDMD. Defaults to None.
+    f (function, optional): The forward operator. Only used for EDMD. EDMD is used if supplied. Defaults to None.
     sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_i Apsi_i. Defaults to 0.
 
     Returns:
@@ -135,8 +135,8 @@ def plot_errors_data_limit(
     Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
     b (function): The drift function.
     sigma (function, optional): The diffusion function. Defaults to None.
-    sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_i Apsi_i. Defaults to 0.
-    f (function, optional): The forward operator for EDMD. Defaults to None.
+    sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_j A(psi_i). Defaults to 0.
+    f (function, optional): The forward operator for EDMD. EDMD is used if supplied. Defaults to None.
     block (bool, optional): Whether to block the plot. Defaults to True.
     power_1 (float, optional): The power of the first slope. Defaults to -1.
     power_2 (float, optional): The power of the second slope. Defaults to -0.5.
