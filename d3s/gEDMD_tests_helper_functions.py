@@ -27,7 +27,7 @@ def gedmdMatrices(X,
 
     Parameters:
     X (numpy.ndarray): Data points for the system.
-    psi (function): A collection of observables.
+    psi (function): A collection of observables. The dictionary.
     b (function): The drift function.
     evs (int, optional): Number of eigenvalues/eigenfunctions to be computed. Defaults to 8.
     Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
@@ -675,3 +675,26 @@ def export_legend(legend, filename="legend.png", pad_inches=0.2):
     # Save the new figure with the legend
     legend_fig.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close(legend_fig)
+
+
+def SDE_solver_2D(X0, b, sigma, n_t, dt):
+    """
+    Solves the SDE dX = b(X)dt + sigma(X)dW, where W is a Wiener process.
+
+    Parameters:
+    X0 (numpy.ndarray): An array of initial values of size [d,n_x] where d is the dimension of the system and n_x is the number of initial values.
+    b (function): The drift function.
+    sigma (function): The diffusion function.
+    n_t (int): The number of time steps.
+    dt (float): The time step.
+
+    Returns:
+    X (numpy.ndarray): An array of size d,n_x. The solution of the SDE at time n_t * dt for each initial value in X0.
+    """
+    d, n_x = X0.shape
+    X = np.zeros((d, n_x))
+    X[:, :] = X0
+    for i in range(n_t):
+        dW = np.random.randn(d, n_x) * np.sqrt(dt)
+        X += b(X) * dt + sigma @ dW
+    return X
