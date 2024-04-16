@@ -1,21 +1,18 @@
-import sysconfig
-import pybind11
 import numpy as np
-import numpy.polynomial
-import scipy as sp
 import matplotlib.pyplot as plt
 import sys
+import sys
 import os
+import scipy.stats as stats
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.realpath(__file__))
-
-# Get the parent directory
 parent_dir = os.path.dirname(script_dir)
-
-# Add the parent directory to the system path
 sys.path.insert(0, parent_dir)
 
-print('The parent directory is: ' + parent_dir)
+import d3s.algorithms as algorithms
+import d3s.domain as domain
+import d3s.observables as observables
+import d3s.gEDMD_tests_helper_functions as gedmd_helper
 
 import d3s.domain as domain
 import d3s.observables as observables
