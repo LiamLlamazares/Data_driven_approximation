@@ -294,24 +294,6 @@ class FEM_1d(object):
 
         return y
 
-    def ddiff(self, x, n=None):
-        '''
-        Compute second order derivatives for all data points in x.
-        '''
-        n = self.n
-        m = x.shape[1]
-        y = _np.zeros(
-            [n, 1, 1, m]
-        )  # only one dimension. Stored in this shape for compatibility with other observables.
-        h = self.h
-
-        for j in range(m):
-            i = int((x[0, j] - self.a) / h)
-            y[i, 0, 0, j] = 1 / h**2
-            y[i + 1, 0, 0, j] = 1 / h**2
-
-        return y
-
     def __repr__(self):
         return 'Finite element basis functions on uniform mesh.'
 

@@ -71,11 +71,8 @@ def gedmdMatrices(X,
             Z = sigma(X)
             S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
             n = PsiX.shape[0]  # number of basis functions
-            if isinstance(
-                    psi, observables.FEM_1d
-            ):  #For fem the second derivatives are calculated differently
-                S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
-                # C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
+            if isinstance(psi, observables.FEM_1d):
+                #For fem the second derivatives are calculated differently  C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
                 C = PsiX @ dPsiY.T + 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
             else:
                 ddPsiX = psi.ddiff(X)  # second-order derivatives
