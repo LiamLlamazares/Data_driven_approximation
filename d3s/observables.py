@@ -241,6 +241,81 @@ class gaussians(object):
         return self.Omega.numBoxes()
 
 
+class FEM_1d(object):
+    '''
+    Finite element basis functions in 1D on uniform mesh. Only correct for second derivative of the form sigma nabla phi_i nabla phi_j.
+    If sigma depends on x, the implementation needs to be adjusted.
+    n = number of basis functions, equal to number of vertices
+    a, b = bounds of the domain
+    '''
+
+    def __init__(self, a, b, n):
+        self.n = n
+        self.a = a
+        self.b = b
+        self.h = (b - a) / (n - 1)
+
+    def __call__(self, x, n=None):
+        '''
+        Evaluate finite element basis functions for all data points in x.
+        '''
+        n = self.n
+        m = x.shape[1]
+        y = _np.zeros([n, m])
+        h = self.h
+
+        for j in range(m):
+            if x[0, j] <= self.a or x[0, j] >= self.b:
+                # print('Warning: Data point outside of domain.')
+                continue
+            i = int((x[0, j] - self.a) / h)  # index of the left vertex
+            y[i, j] = 1 - (
+                x[0, j] -
+                i * h) / h  # linear interpolation, only two non-zero entries
+            y[i + 1, j] = 1 - y[i, j]
+
+        return y
+
+    def diff(self, x, n=None):
+        '''
+        Compute partial derivatives for all data points in x.
+        '''
+        n = self.n
+        m = x.shape[1]
+        y = _np.zeros(
+            [n, 1, m]
+        )  # only one dimension. Stored in this shape for compatibility with other observables
+        h = self.h
+
+        for j in range(m):
+            i = int((x[0, j] - self.a) / h)
+            y[i, 0, j] = -1 / h
+            y[i + 1, 0, j] = 1 / h
+
+        return y
+
+    def ddiff(self, x, n=None):
+        '''
+        Compute second order derivatives for all data points in x.
+        '''
+        n = self.n
+        m = x.shape[1]
+        y = _np.zeros(
+            [n, 1, 1, m]
+        )  # only one dimension. Stored in this shape for compatibility with other observables.
+        h = self.h
+
+        for j in range(m):
+            i = int((x[0, j] - self.a) / h)
+            y[i, 0, 0, j] = 1 / h**2
+            y[i + 1, 0, 0, j] = 1 / h**2
+
+        return y
+
+    def __repr__(self):
+        return 'Finite element basis functions on uniform mesh.'
+
+
 # auxiliary functions
 def nchoosek(n, k):
     '''

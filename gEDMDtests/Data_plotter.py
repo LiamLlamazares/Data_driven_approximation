@@ -30,6 +30,23 @@ gedmd_helper.plot_data_limit(paths_data,
                              font_size=font_size,
                              font_size_ticks=font_size_ticks)
 paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
+
+##FOR FEM
+paths_data = ['OU_FEM', 'OU_PF_FEM', 'OU_EDMD_FEM']
+powers = [-0.5, -1]
+observables_names_data = ['Monomials', 'Gaussians', 'FEM']
+font_size = 30
+font_size_ticks = 30
+gedmd_helper.plot_data_limit(paths_data,
+                             observables_names_data,
+                             powers,
+                             xlabel='$M$',
+                             ylabel='$\epsilon$',
+                             font_size=font_size,
+                             font_size_ticks=font_size_ticks)
+paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
+
+## Dictionary limit
 observables_names_dict = ['Gaussians']
 gedmd_helper.plot_dictionary_limit(paths_dict,
                                    observables_names_dict,

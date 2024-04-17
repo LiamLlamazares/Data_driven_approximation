@@ -51,7 +51,6 @@ psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 observables_list = [psi_m, psi_g]
-X = Omega.rand(2)
 gedmd_helper.plot_errors_data_limit(
     M,
     min_number_of_data_points,
@@ -136,7 +135,9 @@ def sigma(x):
 psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
-observables_list = [psi_m, psi_g]
+psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
+observables_list = [psi_m, psi_g, psi_FEM]
+observables_names = ['Monomials', 'Gaussians', 'FEM']
 #gEDMD Koopman operator
 gedmd_helper.plot_errors_data_limit(M,
                                     min_number_of_data_points,
@@ -149,7 +150,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma=sigma,
                                     operator='K',
-                                    path='OU')
+                                    path='OU_FEM')
 # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
 gedmd_helper.plot_errors_data_limit(M,
                                     min_number_of_data_points,
@@ -162,7 +163,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma=sigma,
                                     operator='P',
-                                    path='OU_PF')
+                                    path='OU_PF_FEM')
 
 h = 0.001  #EDMD
 tau = 0.5
@@ -178,4 +179,4 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma=sigma,
                                     f=f,
-                                    path='OU_EDMD')
+                                    path='OU_EDMD_FEM')
