@@ -72,3 +72,31 @@ gedmd_helper.plot_data_limit(paths_noise,
                              ylabel='$\epsilon$',
                              font_size=font_size,
                              font_size_ticks=font_size_ticks)
+
+## Dictionary limit FEM
+paths_dict = ['OU_FEM', 'OU_EDMD_FEM']
+observables_names_dict = ['Gaussians', 'FEM']
+gedmd_helper.plot_dictionary_limit(paths_dict,
+                                   observables_names_dict,
+                                   xlabel='$N$',
+                                   ylabel='$\epsilon$',
+                                   font_size=font_size,
+                                   font_size_ticks=font_size_ticks)
+paths_noise = [
+    'ODE_sigma_noise =0.001',
+    'ODE_sigma_noise =0.01',
+    'ODE_sigma_noise =0.1',
+    'OU_PF_FEM_sigma_noise =0.001',
+    'OU_PF_FEM_sigma_noise =0.01',
+    'OU_PF_FEM_sigma_noise =0.1',
+    'OU_FEM_sigma_noise =0.001',
+    'OU_FEM_sigma_noise =0.01',
+    'OU_FEM_sigma_noise =0.1',
+]
+gedmd_helper.plot_data_limit(paths_noise,
+                             observables_names_data,
+                             powers,
+                             xlabel='$N$',
+                             ylabel='$\epsilon$',
+                             font_size=font_size,
+                             font_size_ticks=font_size_ticks)

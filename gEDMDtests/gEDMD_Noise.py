@@ -1,4 +1,4 @@
-#In this file we show plots of the rate of convergence
+#In this file we show plots of the rate of convergence as a function of the number of observables
 #of GEDMD for different number of observables
 #We compare the rate of convergence for monomials and gaussians
 
@@ -115,7 +115,9 @@ def sigma(x):
 psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
-observables_list = [psi_m, psi_g]
+psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
+observables_list = [psi_m, psi_g, psi_FEM]
+observables_names = ['Monomials', 'Gaussians', 'FEM']
 
 # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
 sigma_noise = 0.001
@@ -131,7 +133,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise =' +
                                     str(sigma_noise))
 sigma_noise = 0.01
 gedmd_helper.plot_errors_data_limit(M,
@@ -146,7 +148,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise =' +
                                     str(sigma_noise))
 sigma_noise = 0.1
 gedmd_helper.plot_errors_data_limit(M,
@@ -161,44 +163,49 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise =' +
                                     str(sigma_noise))
-# sigma_noise = 0.001
-# gedmd_helper.plot_errors_data_limit(M,
-#                                     min_number_of_data_points,
-#                                     confidence_level,
-#                                     number_of_runs,
-#                                     number_of_batches,
-#                                     observables_list,
-#                                     observables_names,
-#                                     Omega,
-#                                     b,
-#                                     sigma_noise=sigma_noise,
-#                                     sigma=sigma,
-#                                     path='OU_sigma_noise =' + str(sigma_noise))
-# sigma_noise = 0.01
-# gedmd_helper.plot_errors_data_limit(M,
-#                                     min_number_of_data_points,
-#                                     confidence_level,
-#                                     number_of_runs,
-#                                     number_of_batches,
-#                                     observables_list,
-#                                     observables_names,
-#                                     Omega,
-#                                     b,
-#                                     sigma_noise=sigma_noise,
-#                                     sigma=sigma,
-#                                     path='OU_sigma_noise =' + str(sigma_noise))
-# sigma_noise = 0.1
-# gedmd_helper.plot_errors_data_limit(M,
-#                                     min_number_of_data_points,
-#                                     confidence_level,
-#                                     number_of_runs,
-#                                     number_of_batches,
-#                                     observables_list,
-#                                     observables_names,
-#                                     Omega,
-#                                     b,
-#                                     sigma_noise=sigma_noise,
-#                                     sigma=sigma,
-#                                     path='OU_sigma_noise =' + str(sigma_noise))
+# gEDMD Koopman operator
+
+sigma_noise = 0.001
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_FEM_sigma_noise =' +
+                                    str(sigma_noise))
+sigma_noise = 0.01
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_FEM_sigma_noise =' +
+                                    str(sigma_noise))
+sigma_noise = 0.1
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches,
+                                    observables_list,
+                                    observables_names,
+                                    Omega,
+                                    b,
+                                    sigma_noise=sigma_noise,
+                                    sigma=sigma,
+                                    path='OU_FEM_sigma_noise =' +
+                                    str(sigma_noise))

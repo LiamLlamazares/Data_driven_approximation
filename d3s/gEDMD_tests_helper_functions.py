@@ -67,13 +67,21 @@ def gedmdMatrices(X,
         dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
 
         if not (sigma is None):  # stochastic dynamical system
+
             Z = sigma(X)
-            n = PsiX.shape[0]  # number of basis functions
-            ddPsiX = psi.ddiff(X)  # second-order derivatives
             S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
-            for i in range(n):
-                dPsiY[i, :] += 0.5 * np.sum(ddPsiX[i, :, :, :] * S,
-                                            axis=(0, 1))
+            n = PsiX.shape[0]  # number of basis functions
+            if isinstance(
+                    psi, observables.FEM_1d
+            ):  #For fem the second derivatives are calculated differently
+                S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
+                # C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
+                C = PsiX @ dPsiY.T + 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
+            else:
+                ddPsiX = psi.ddiff(X)  # second-order derivatives
+                for i in range(n):
+                    dPsiY[i, :] += 0.5 * np.sum(ddPsiX[i, :, :, :] * S,
+                                                axis=(0, 1))
 
         if not (sigma_noise is None):  #Noise if added
             PsiX += sigma_noise * np.random.randn(*PsiX.shape)
@@ -403,6 +411,12 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                             Omega._bounds[0, 0]) / Omega._boxes[0] / 2
                 dictionary = observables.gaussians(Omega, sigma=variance)
                 print('Gaussians created', dictionary.length())
+            elif observables_names[type] == 'FEM':
+                dictionary = observables.FEM_1d(Omega._bounds[0, 0],
+                                                Omega._bounds[0, 1],
+                                                Omega._boxes[0])
+                print('FEM created', dictionary.n)
+
         # Exacts operators are the same over all runs to save time
 
             A_exact, G_exact, C_exact, T_exact, gamma = gedmdMatrices(
@@ -569,7 +583,11 @@ def plot_dictionary_limit(paths,
                           ylabel='$\epsilon$',
                           font_size=12,
                           font_size_ticks=10,
-                          colours=[
+                          colours_observed=[
+                              'blue', 'orange', 'green', 'red', 'purple',
+                              'brown', 'pink', 'gray', 'olive', 'cyan'
+                          ],
+                          colours_theoretical=[
                               'blue', 'orange', 'green', 'red', 'purple',
                               'brown', 'pink', 'gray', 'olive', 'cyan'
                           ]):
@@ -580,7 +598,7 @@ def plot_dictionary_limit(paths,
     legend_labels = observables_error_labels + theoretical_labels + CI_labels
 
     for path in paths:
-        #Extracts the data for each plot
+        # Extracts the data for each plot
         data = np.load('gEDMDtests/Simulation_data/Dictionary_Limit/' + path +
                        '.npz')
         observables_numbers = data['observables_numbers']
@@ -596,21 +614,28 @@ def plot_dictionary_limit(paths,
                 theoretical_errors[0, i], 1)
         # Plotting data
         plt.figure()
-        plt.loglog(observables_numbers, matrix_errors_average, marker='o')
-        plt.loglog(observables_numbers, theoretical_errors, marker='o')
-
         for i in range(lower_bound.shape[1]):
+            plt.loglog(observables_numbers,
+                       matrix_errors_average[:, i],
+                       marker='o',
+                       color=colours_observed[i % len(colours_observed)])
+            # Plotting data
+            plt.loglog(observables_numbers,
+                       theoretical_errors[:, i],
+                       marker='o',
+                       color=colours_theoretical[i % len(colours_theoretical)],
+                       linestyle='-.')
             plt.fill_between(observables_numbers,
                              lower_bound[:, i],
                              upper_bound[:, i],
-                             color=colours[i % len(colours)],
+                             color=colours_observed[i % len(colours_observed)],
                              alpha=0.2)
 
         plt.xlabel(xlabel, fontsize=font_size)
         plt.ylabel(ylabel, fontsize=font_size)
         plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
         plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
-        #Gets the legend for first plot to export and then removes it
+        # Gets the legend for first plot to export and then removes it
         if path == paths[0]:
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
@@ -624,7 +649,7 @@ def plot_dictionary_limit(paths,
         plt.savefig('gEDMDtests/Simulation_figures/Dictionary_Limit/' + path +
                     '.pdf',
                     bbox_inches='tight')
-        plt.close()  #
+        plt.close()
 
 
 #In the notation we use in our new paper:

@@ -20,13 +20,13 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
 plt.ion()
-M_exact = 10**5
-M_approx = 10**4
+M_exact = 10**4
+M_approx = 10**3
 min_number_of_observables = 2
 boxes1 = 2
 boxes2 = 2
 boxes = np.array([boxes1, boxes2])
-max_number_of_observables = 8 * 10**2
+max_number_of_observables = 10**2
 
 number_of_runs = 20
 number_of_batches = 5
@@ -138,7 +138,7 @@ def sigma(x):
 
 
 #define observables
-observables_names = ['Gaussians']
+observables_names = ['Gaussians', 'FEM']
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           max_number_of_observables,
                                           confidence_level,
@@ -151,7 +151,7 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           M_exact=M_exact,
                                           M_approx=M_approx,
                                           prob=0.5,
-                                          path='OU')
+                                          path='OU_FEM')
 
 h = 0.001
 tau = 0.5
@@ -169,4 +169,4 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           M_exact=M_exact,
                                           M_approx=M_approx,
                                           prob=0.5,
-                                          path='OU_EDMD')
+                                          path='OU_EDMD_FEM')
