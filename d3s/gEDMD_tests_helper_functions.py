@@ -512,9 +512,13 @@ def plot_data_limit(paths,
                     font_size=12,
                     font_size_ticks=10,
                     block=False,
-                    colours=[
+                    colours_observed=[
                         'blue', 'orange', 'green', 'red', 'purple', 'brown',
                         'pink', 'gray', 'olive', 'cyan'
+                    ],
+                    colours_slopes=[
+                        'red', 'purple', 'cyan', 'brown', 'pink', 'gray',
+                        'olive', 'cyan'
                     ]):
 
     # Create legend labels
@@ -542,7 +546,7 @@ def plot_data_limit(paths,
             plt.fill_between(data_points_number,
                              lower_bound[:, i],
                              upper_bound[:, i],
-                             color=colours[i % len(colours)],
+                             color=colours_observed[i % len(colours_observed)],
                              alpha=0.2,
                              label=CI_labels[i])
 
@@ -551,14 +555,15 @@ def plot_data_limit(paths,
                        np.power(np.float64(data_points_number), power) *
                        matrix_errors_average[0, 0] /
                        np.power(np.float64(data_points_number[0]), power),
-                       label=power_labels[i])
+                       label=power_labels[i],
+                       color=colours_slopes[i % len(colours_slopes)])
 
         plt.xlabel(xlabel, fontsize=font_size)
         plt.ylabel(ylabel, fontsize=font_size)
         plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
         plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
         #Gets the legend for first plot to export and then removes it
-        if path == paths[0]:
+        if path == paths[-1]:
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
                 loc='lower left',
@@ -624,7 +629,7 @@ def plot_dictionary_limit(paths,
                        linestyle='-.')
             plt.fill_between(observables_numbers,
                              lower_bound[:, i],
-                             upper_bound[:, i],
+                             np.minimum(upper_bound[:, i], 1),
                              color=colours_observed[i % len(colours_observed)],
                              alpha=0.2)
 
