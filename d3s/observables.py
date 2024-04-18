@@ -243,7 +243,7 @@ class gaussians(object):
 
 class FEM_1d(object):
     '''
-    Finite element basis functions in 1D on uniform mesh. Only correct for second derivative of the form sigma nabla phi_i nabla phi_j.
+    Finite element basis functions in 1D on uniform mesh with 0 boundary. Only correct for second derivative of the form sigma nabla phi_i nabla phi_j.
     If sigma depends on x, the implementation needs to be adjusted.
     n = number of basis functions, equal to number of vertices
     a, b = bounds of the domain
@@ -253,7 +253,7 @@ class FEM_1d(object):
         self.n = n
         self.a = a
         self.b = b
-        self.h = (b - a) / (n - 1)
+        self.h = (b - a) / (n + 1)
 
     def __call__(self, x, n=None):
         '''
@@ -268,11 +268,15 @@ class FEM_1d(object):
             if x[0, j] <= self.a or x[0, j] >= self.b:
                 # print('Warning: Data point outside of domain.')
                 continue
-            i = int((x[0, j] - self.a) / h)  # index of the left vertex
-            y[i, j] = 1 - (
-                x[0, j] -
-                i * h) / h  # linear interpolation, only two non-zero entries
-            y[i + 1, j] = 1 - y[i, j]
+            i = int((x[0, j] - self.a) /
+                    h)  # index of the left vertex, belongs to [0, n]
+            if i == 0:
+                y[i, j] = (x[0, j] - i * h) / h  # next to left boundary
+            elif i == n:
+                y[i - 1, j] = 1 - (x[0, j] - i * h) / h  #  right boundary
+            else:
+                y[i - 1, j] = (x[0, j] - i * h) / h  # linear interpolation
+                y[i, j] = 1 - y[i - 1, j]
 
         return y
 
@@ -288,9 +292,17 @@ class FEM_1d(object):
         h = self.h
 
         for j in range(m):
+            if x[0, j] <= self.a or x[0, j] >= self.b:
+                # print('Warning: Data point outside of domain.')
+                continue
             i = int((x[0, j] - self.a) / h)
-            y[i, 0, j] = -1 / h
-            y[i + 1, 0, j] = 1 / h
+            if i == 0:
+                y[i, 0, j] = 1 / h
+            elif i == n:
+                y[i - 1, 0, j] = -1 / h
+            else:
+                y[i - 1, 0, j] = 1 / h
+                y[i, 0, j] = -1 / h
 
         return y
 

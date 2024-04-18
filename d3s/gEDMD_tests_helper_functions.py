@@ -73,7 +73,7 @@ def gedmdMatrices(X,
             n = PsiX.shape[0]  # number of basis functions
             if isinstance(psi, observables.FEM_1d):
                 #For fem the second derivatives are calculated differently  C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
-                C = PsiX @ dPsiY.T + 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
+                C = PsiX @ dPsiY.T - 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
             else:
                 ddPsiX = psi.ddiff(X)  # second-order derivatives
                 for i in range(n):

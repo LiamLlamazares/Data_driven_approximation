@@ -33,91 +33,86 @@ number_of_batches = 5
 confidence_level = 0.95
 number_of_monomials = 8
 
-# ########################################
-#Simple deterministic system
-# ########################################
-# define domain
-bounds = np.array([[-1, 1], [-1, 1]])
-Omega = domain.discretization(bounds, boxes)
+# # ########################################
+# #Simple deterministic system
+# # ########################################
+# # define domain
+# bounds = np.array([[-1, 1], [-1, 1]])
+# Omega = domain.discretization(bounds, boxes)
 
-# define system
-gamma = -0.8
-delta = -0.7
+# # define system
+# gamma = -0.8
+# delta = -0.7
 
+# def b(x):
+#     return np.array([gamma * x[0, :], delta * (x[1, :] - x[0, :]**2)])
 
-def b(x):
-    return np.array([gamma * x[0, :], delta * (x[1, :] - x[0, :]**2)])
+# #define observables
+# observables_names = ['Gaussians']
 
-
-#define observables
-observables_names = ['Gaussians']
-
-gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-                                          max_number_of_observables,
-                                          confidence_level,
-                                          number_of_runs,
-                                          number_of_batches,
-                                          observables_names,
-                                          Omega,
-                                          b,
-                                          sigma=None,
-                                          sigma_noise=0.1,
-                                          M_exact=M_exact,
-                                          M_approx=M_approx,
-                                          prob=0.5,
-                                          path='ODE')
-
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           sigma_noise=0.1,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='ODE')
 
 # ########################################
 #Double well system
 # ########################################
-def b(x):
-    return np.vstack((-4 * x[0, :]**3 + 4 * x[0, :], -2 * x[1, :]))
+# def b(x):
+#     return np.vstack((-4 * x[0, :]**3 + 4 * x[0, :], -2 * x[1, :]))
 
+# def sigma(x):
+#     n = x.shape[1]
+#     y = np.zeros((2, 2, n))
+#     y[0, 0, :] = 0.7
+#     y[0, 1, :] = x[0, :]
+#     y[1, 1, :] = 0.5
+#     return y
 
-def sigma(x):
-    n = x.shape[1]
-    y = np.zeros((2, 2, n))
-    y[0, 0, :] = 0.7
-    y[0, 1, :] = x[0, :]
-    y[1, 1, :] = 0.5
-    return y
+# observables_names = ['Gaussians']
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='Double_well')
 
+# f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           f=f,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='Double_well_EDMD')
 
-observables_names = ['Gaussians']
-gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-                                          max_number_of_observables,
-                                          confidence_level,
-                                          number_of_runs,
-                                          number_of_batches,
-                                          observables_names,
-                                          Omega,
-                                          b,
-                                          sigma=None,
-                                          M_exact=M_exact,
-                                          M_approx=M_approx,
-                                          prob=0.5,
-                                          path='Double_well')
-
-f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
-gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-                                          max_number_of_observables,
-                                          confidence_level,
-                                          number_of_runs,
-                                          number_of_batches,
-                                          observables_names,
-                                          Omega,
-                                          b,
-                                          sigma=None,
-                                          f=f,
-                                          M_exact=M_exact,
-                                          M_approx=M_approx,
-                                          prob=0.5,
-                                          path='Double_well_EDMD')
-
-# # ########################################
-# #OU system
-# # ########################################
+# # # ########################################
+# # #OU system
+# # # ########################################
 
 # define domain
 bounds = np.array([[-1, 1]])
@@ -137,19 +132,19 @@ def sigma(x):
     return np.sqrt(2 / beta) * np.ones((1, 1, x.shape[1]))
 
 
-gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
-                                          max_number_of_observables,
-                                          confidence_level,
-                                          number_of_runs,
-                                          number_of_batches,
-                                          observables_names,
-                                          Omega,
-                                          b,
-                                          sigma=None,
-                                          M_exact=M_exact,
-                                          M_approx=M_approx,
-                                          prob=0.5,
-                                          path='OU')
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='OU')
 
 h = 0.001
 tau = 0.5
