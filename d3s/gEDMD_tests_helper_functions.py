@@ -586,11 +586,11 @@ def plot_dictionary_limit(paths,
                           font_size=12,
                           font_size_ticks=10,
                           colours_observed=[
-                              'blue', 'orange', 'green', 'red', 'purple',
+                              'blue', 'green', 'orange', 'red', 'purple',
                               'brown', 'pink', 'gray', 'olive', 'cyan'
                           ],
                           colours_theoretical=[
-                              'blue', 'orange', 'green', 'red', 'purple',
+                              'blue', 'green', 'orange', 'red', 'purple',
                               'brown', 'pink', 'gray', 'olive', 'cyan'
                           ]):
 
@@ -621,12 +621,15 @@ def plot_dictionary_limit(paths,
                        matrix_errors_average[:, i],
                        marker='o',
                        color=colours_observed[i % len(colours_observed)])
-            # Plotting data
+
+        for i in range(lower_bound.shape[1]):
             plt.loglog(observables_numbers,
                        theoretical_errors[:, i],
                        marker='o',
                        color=colours_theoretical[i % len(colours_theoretical)],
                        linestyle='-.')
+
+        for i in range(lower_bound.shape[1]):
             plt.fill_between(observables_numbers,
                              lower_bound[:, i],
                              np.minimum(upper_bound[:, i], 1),
@@ -637,8 +640,8 @@ def plot_dictionary_limit(paths,
         plt.ylabel(ylabel, fontsize=font_size)
         plt.tick_params(axis='both', which='major', labelsize=font_size_ticks)
         plt.tick_params(axis='both', which='minor', labelsize=font_size_ticks)
-        # Gets the legend for first plot to export and then removes it
-        if path == paths[0]:
+        # Gets the legend for last plot to export and then removes it
+        if path == paths[-1]:
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
                 loc='lower left',

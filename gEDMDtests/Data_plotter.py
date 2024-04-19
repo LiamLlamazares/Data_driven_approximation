@@ -44,10 +44,10 @@ gedmd_helper.plot_data_limit(paths_data,
                              ylabel='$\epsilon$',
                              font_size=font_size,
                              font_size_ticks=font_size_ticks)
-paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
+paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD_FEM']
 
 ## Dictionary limit
-observables_names_dict = ['Gaussians']
+observables_names_dict = ['Gaussians', 'FEM']
 gedmd_helper.plot_dictionary_limit(paths_dict,
                                    observables_names_dict,
                                    xlabel='$N$',
