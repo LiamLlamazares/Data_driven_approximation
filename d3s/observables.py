@@ -456,6 +456,9 @@ class FEM_2d(object):
             self.calc_G(X, f=f, sigma_noise=sigma_noise)  #EDMD
         return C
 
+    def __repr__(self):
+        return '2D Finite element basis functions on uniform mesh.'
+
 
 class FEM_1d(object):
     '''

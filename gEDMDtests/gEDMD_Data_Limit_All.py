@@ -21,7 +21,7 @@ import d3s.systems as systems
 
 plt.ion()
 # Constants
-M = 10**6
+M = 10**3
 number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
@@ -29,41 +29,44 @@ degree_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians']
 min_number_of_data_points = 250
 
-# # ########################################
-# #Simple deterministic system
-# # ########################################
-# # define domain
-# bounds = np.array([[-2, 2], [-1, 1]])
-# boxes = np.array([9, 5])
-# Omega = domain.discretization(bounds, boxes)
+# ########################################
+#Simple deterministic system
+# ########################################
+# define domain
+bounds = np.array([[-2, 2], [-1, 1]])
+boxes = np.array([9, 5])
+Omega = domain.discretization(bounds, boxes)
 
-# # define system
-# gamma = -0.8
-# delta = -0.7
+# define system
+gamma = -0.8
+delta = -0.7
 
-# def b(x):
-#     return np.array([gamma * x[0, :], delta * (x[1, :] - x[0, :]**2)])
 
-# # define observables
-# psi_m = observables.monomials(degree_of_monomials)
-# variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
-# psi_g = observables.gaussians(Omega, sigma=variance)
-# observables_list = [psi_m, psi_g]
-# gedmd_helper.plot_errors_data_limit(
-#     M,
-#     min_number_of_data_points,
-#     confidence_level,
-#     number_of_runs,
-#     number_of_batches,
-#     observables_list,
-#     observables_names,
-#     Omega,
-#     b,
-#     sigma_noise=0,
-#     # title='Simple deterministic system gEDMD',
-#     operator='K',
-#     path='ODE')
+def b(x):
+    return np.array([gamma * x[0, :], delta * (x[1, :] - x[0, :]**2)])
 
+
+# define observables
+psi_m = observables.monomials(degree_of_monomials)
+variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
+psi_g = observables.gaussians(Omega, sigma=variance)
+psi_FEM = observables.FEM_2d(Omega)
+observables_list = [psi_m, psi_g, psi_FEM]
+gedmd_helper.plot_errors_data_limit(
+    M,
+    min_number_of_data_points,
+    confidence_level,
+    number_of_runs,
+    number_of_batches,
+    observables_list,
+    ['Monomials', 'Gaussians', 'FEM'],
+    Omega,
+    b,
+    sigma_noise=0,
+    # title='Simple deterministic system gEDMD',
+    operator='K',
+    path='ODE_FEM')
+1 + 1
 # # ########################################
 # #Double well system
 # # ########################################
