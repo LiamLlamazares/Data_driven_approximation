@@ -3,6 +3,7 @@
 import math
 import numpy as _np
 from scipy.spatial import distance
+from skfem import MeshTri
 
 
 def identity(x):
@@ -239,6 +240,166 @@ class gaussians(object):
 
     def length(self):
         return self.Omega.numBoxes()
+
+
+class FEM_2d(object):
+    '''
+    Finite element basis functions on uniform mesh with 0 boundary. 
+    Omega = domain
+    n = approximate number of basis functions, equal to number of vertices
+    '''
+
+    def __init__(self, Omega):
+        self.d = Omega._bounds.shape[0]
+        n = Omega.numBoxes()
+        # Creates a uniform mesh
+        x = _np.linspace(Omega._bounds[0, 0], Omega._bounds[0, 1],
+                         int(_np.sqrt(n)) - 1)
+        y = _np.linspace(Omega._bounds[1, 0], Omega._bounds[1, 1],
+                         int(_np.sqrt(n)) - 1)
+        self.mesh = MeshTri.init_tensor(x,
+                                        y)  # Create the mesh with N vertices
+        #Calculates Jacobian of mappings (linear part)
+        self.inverse_mappings = [
+            self.__inverse_mapping(i) for i in range(self.mesh.t.shape[1])
+        ]
+        self.inverse_mapping_jacobians = [
+            self.__inverse_mapping_jacobian(i)
+            for i in range(self.mesh.t.shape[1])
+        ]
+
+    def __x_in_triangle(self, triangle_index, x):
+        '''
+        Check if point x is inside the triangle 
+        '''
+
+        vertices = self.mesh.p[:, self.mesh.t[:, triangle_index]].T
+
+        def sign(p1, p2, p3):
+            return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (
+                p1[1] - p3[1])
+
+        b1 = sign(x, vertices[0], vertices[1]) < 0.0
+        b2 = sign(x, vertices[1], vertices[2]) < 0.0
+        b3 = sign(x, vertices[2], vertices[0]) < 0.0
+
+        return ((b1 == b2) and (b2 == b3))
+
+    def __get_Triangle(self, x):
+        '''
+        Find the triangle that contains the point x.
+        '''
+        mesh = self.mesh
+        for i in range(mesh.t.shape[1]):
+            if self.__x_in_triangle(i, x):
+                return i
+        return -1
+
+    def __inverse_mapping(self, triangle_index):
+        '''
+        Returns function that given mesh coordinates of points in triangle returns local (reference) coordinates.
+        Sends v0,v1,v2 to (0,0), (1,0), (0,1).
+        '''
+        mesh = self.mesh
+
+        def inverse_mapping(x):
+            vertices = mesh.p[:, mesh.t[:, triangle_index]].T
+            A = _np.vstack(
+                (vertices[1] - vertices[0], vertices[2] - vertices[0])).T
+            x_reference = _np.linalg.solve(A, x - vertices[0])
+            return x_reference
+
+        return inverse_mapping
+
+    def __inverse_mapping_jacobian(self, triangle_index):
+        '''
+        Returns Jacobian of mapping from mesh to reference coordinates.
+        Linear part of function that sends v0,v1,v2 to (0,0), (1,0), (0,1).
+        '''
+        mesh = self.mesh
+        vertices = mesh.p[:, mesh.t[:, triangle_index]].T
+        A_linear = _np.vstack(
+            (vertices[1] - vertices[0], vertices[2] - vertices[0])).T
+        return _np.linalg.inv(A_linear)
+
+    def __phi(self, x):
+        '''
+        Evaluate finite element basis functions for all data points in x.
+        '''
+        return _np.array([1 - x[0] - x[1], x[0], x[1]])
+
+    def __nabla_phi_ref(self):
+        '''
+        Compute partial derivatives of the reference basis functions. Size 2x3.
+        '''
+        return _np.array([[-1, 1, 0], [-1, 0, 1]])
+
+    def calc_G(self, X, f=None):
+        '''
+        Calculate the mass matrix G given the data points X.
+        Sums up phi_i(x_m)phi_j(x_m) for all data points x_m and adds to relevant entries of G.
+        '''
+        if f is None:
+            f = identity
+            M = X.shape[1]
+            n = self.mesh.p.shape[1]
+            G = _np.zeros([n, n])
+            for m in range(M):
+                triangle_index = self.__get_Triangle(X[:, m])
+                if triangle_index == -1:
+                    continue
+                inverse_mapping = self.inverse_mappings[triangle_index]
+                phi = self.__phi(inverse_mapping(X[:, m]))
+                phiY = self.__phi(inverse_mapping(f(
+                    X[:, m])))  #Used for EDMD only to calculate C matrix
+                global_indices = self.mesh.t[:, triangle_index]
+                for i in range(3):
+                    for j in range(3):
+                        G[global_indices[i],
+                          global_indices[j]] += phi[i] * phiY[j]
+        return G
+
+    def calc_C(self, X, b, sigma, f=None):
+        '''
+        Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
+        Sums up d_xk Sigma_kl phi_i(x_m)d_xl phi_j(x_m) for all data points x_m and over k,l and adds to relevant entries of C.
+        Uses nabla_phi_i(x) = J^{-t} nabla_phi_ref (B^{-1}(x)), where J is the Jacobian of the mapping B from reference to mesh coordinates.
+        
+          * J^{-1}(x) where J is the Jacobian of the mapping from reference to mesh coordinates.
+        '''
+        if f is None:  #gEDMD
+            M = X.shape[1]
+            mesh = self.mesh
+            n = mesh.p.shape[1]
+            d = self.d
+            Y = b(X)
+            C = _np.zeros([n, n])
+            for m in range(M):
+                triangle_index = self.__get_Triangle(X[:, m])
+                if triangle_index == -1:
+                    continue
+                inverse_mapping = self.inverse_mappings[triangle_index]
+                nabla_phi_ref = self.__nabla_phi_ref()
+                J_inv = self.inverse_mapping_jacobians[triangle_index]
+                phi = self.__phi(inverse_mapping(
+                    X[:, m]))  # Value of basis functions at x_m
+                nabla_phi = _np.dot(
+                    J_inv.T,
+                    nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
+                for k in range(d):
+                    for l in range(d):
+                        for i in range(3):
+                            for j in range(3):
+                                gi, gj = mesh.t[:, triangle_index][_np.array(
+                                    [i, j])]  # global indices
+                                C[gi, gj] += Y[k, m] * nabla_phi[k, i] * phi[j]
+                                if sigma is not None:
+                                    C[gi,
+                                      gj] += -0.5 * sigma[k, l] * nabla_phi[
+                                          k, i] * nabla_phi[l, j]
+        else:
+            self.calc_G(X, f)  #EDMD
+        return C
 
 
 class FEM_1d(object):
