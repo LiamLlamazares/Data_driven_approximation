@@ -61,6 +61,14 @@ X = Omega.rand(1000)
 Sigma = 2 * np.eye(2)
 C = psi_FEM.calc_C(X, b, Sigma, f=None)
 G = psi_FEM.calc_G(X, f=None)
+A1, G1, C1, _ = gedmd_helper.gedmdMatrices(X,
+                                           psi_FEM,
+                                           b,
+                                           Omega,
+                                           sigma=None,
+                                           f=None,
+                                           sigma_noise=0,
+                                           operator='K')
 observables_list = [psi_m, psi_g]
 
 # or, save to external file:

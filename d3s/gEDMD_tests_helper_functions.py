@@ -61,13 +61,19 @@ def gedmdMatrices(X,
 
     ```
     """
-    if f is None:  #gEDMD
-        if isinstance(psi, observables.FEM_2d):
-            C = psi.calc_C(X, sigma)  #Don't use f in C calculation
-            G = psi.calc_G(X, b, sigma, f)
-            T = None
 
-        else:
+    if isinstance(psi, observables.FEM_2d):
+        G = psi.calc_G(
+            X, f=None,
+            sigma_noise=sigma_noise)  #Don't use f in Gramm calculation
+        C = psi.calc_C(X, b, sigma=sigma, f=f, sigma_noise=sigma_noise)
+
+        T = None  #Not implemented
+        if operator == 'P':
+            C = C.T  #Perron Frobenius operator is the transpose of the Koopman operator
+        A = sp.linalg.solve(G, C.T)
+    else:
+        if f is None:  #gEDMD
             Y = b(X)
             PsiX = psi(X)
             dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
@@ -94,26 +100,25 @@ def gedmdMatrices(X,
                 C = PsiX @ dPsiY.T
                 if operator == 'P': C = C.T
                 T = dPsiY @ dPsiY.T
-                uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
-    else:  #EDMD
-        Y = f(X)
-        PsiX = psi(X)
-        PsiY = psi(Y)
+                # uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
+        else:  #EDMD
+            Y = f(X)
+            PsiX = psi(X)
+            PsiY = psi(Y)
 
-        if not (sigma_noise is None):  #Noise if added
-            PsiX += sigma_noise * np.random.randn(*PsiX.shape)
-            PsiY += sigma_noise * np.random.randn(*PsiY.shape)
+            if not (sigma_noise is None):  #Noise if added
+                PsiX += sigma_noise * np.random.randn(*PsiX.shape)
+                PsiY += sigma_noise * np.random.randn(*PsiY.shape)
 
-        G = PsiX @ PsiX.T
-        C = PsiX @ PsiY.T
-        if operator == 'P': C = C.T
-        T = PsiY @ PsiY.T
-        uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
+            G = PsiX @ PsiX.T
+            C = PsiX @ PsiY.T
+            if operator == 'P': C = C.T
+            T = PsiY @ PsiY.T
+            # uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
 
-    #A = sp.linalg.pinv(G) @ C.T
-    A = sp.linalg.solve(G, C)
+        A = sp.linalg.solve(G, C)
 
-    return A, G, C, T, uniform_norm_psi_A_psi
+    return A, G, C, T
 
 
 def plot_errors_data_limit(
@@ -219,13 +224,13 @@ gedmd_helper.plot_errors_data_limit(M,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _, _, _ = gedmdMatrices(X_exact,
-                                         observables_list[type],
-                                         b,
-                                         Omega,
-                                         sigma,
-                                         f,
-                                         operator=operator)
+        A_ex, _, _, _ = gedmdMatrices(X_exact,
+                                      observables_list[type],
+                                      b,
+                                      Omega,
+                                      sigma,
+                                      f,
+                                      operator=operator)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
 
@@ -234,14 +239,14 @@ gedmd_helper.plot_errors_data_limit(M,
                   observables_names[type])
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
-                A, _, _, _, _, = gedmdMatrices(X,
-                                               observables_list[type],
-                                               b,
-                                               Omega,
-                                               sigma,
-                                               f,
-                                               sigma_noise=sigma_noise,
-                                               operator=operator)
+                A, _, _, _, = gedmdMatrices(X,
+                                            observables_list[type],
+                                            b,
+                                            Omega,
+                                            sigma,
+                                            f,
+                                            sigma_noise=sigma_noise,
+                                            operator=operator)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
 

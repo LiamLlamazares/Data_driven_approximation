@@ -334,16 +334,18 @@ class FEM_2d(object):
         '''
         return _np.array([[-1, 1, 0], [-1, 0, 1]])
 
-    def calc_G(self, X, f=None):
+    def calc_G(self, X, f=None, sigma_noise=None):
         '''
         Calculate the mass matrix G given the data points X.
         Sums up phi_i(x_m)phi_j(x_m) for all data points x_m and adds to relevant entries of G.
         '''
         if f is None:
             f = identity
-            M = X.shape[1]
-            n = self.mesh.p.shape[1]
-            G = _np.zeros([n, n])
+        M = X.shape[1]
+        n = self.mesh.p.shape[1]
+        G = _np.zeros([n, n])
+
+        if sigma_noise is None:
             for m in range(M):
                 triangle_index = self.__get_Triangle(X[:, m])
                 if triangle_index == -1:
@@ -357,9 +359,24 @@ class FEM_2d(object):
                     for j in range(3):
                         G[global_indices[i],
                           global_indices[j]] += phi[i] * phiY[j]
+        else:
+            for m in range(M):
+                triangle_index = self.__get_Triangle(X[:, m])
+                if triangle_index == -1:
+                    continue
+                inverse_mapping = self.inverse_mappings[triangle_index]
+                phi = self.__phi(inverse_mapping(X[:, m]))
+                phiY = self.__phi(inverse_mapping(f(
+                    X[:, m])))  #Used for EDMD only to calculate C matrix
+                global_indices = self.mesh.t[:, triangle_index]
+                for i in range(3):
+                    for j in range(3):
+                        G[global_indices[i], global_indices[j]] += (
+                            phi[i] + sigma_noise * _np.random.randn()) * (
+                                phiY[j] + sigma_noise * _np.random.randn())
         return G
 
-    def calc_C(self, X, b, sigma, f=None):
+    def calc_C(self, X, b, sigma, f=None, sigma_noise=None):
         '''
         Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
         Sums up d_xk Sigma_kl phi_i(x_m)d_xl phi_j(x_m) for all data points x_m and over k,l and adds to relevant entries of C.
@@ -374,31 +391,69 @@ class FEM_2d(object):
             d = self.d
             Y = b(X)
             C = _np.zeros([n, n])
-            for m in range(M):
-                triangle_index = self.__get_Triangle(X[:, m])
-                if triangle_index == -1:
-                    continue
-                inverse_mapping = self.inverse_mappings[triangle_index]
-                nabla_phi_ref = self.__nabla_phi_ref()
-                J_inv = self.inverse_mapping_jacobians[triangle_index]
-                phi = self.__phi(inverse_mapping(
-                    X[:, m]))  # Value of basis functions at x_m
-                nabla_phi = _np.dot(
-                    J_inv.T,
-                    nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
-                for k in range(d):
-                    for l in range(d):
-                        for i in range(3):
-                            for j in range(3):
-                                gi, gj = mesh.t[:, triangle_index][_np.array(
-                                    [i, j])]  # global indices
-                                C[gi, gj] += Y[k, m] * nabla_phi[k, i] * phi[j]
-                                if sigma is not None:
+
+            if sigma_noise is None:
+                for m in range(M):
+                    triangle_index = self.__get_Triangle(X[:, m])
+                    if triangle_index == -1:
+                        continue
+                    inverse_mapping = self.inverse_mappings[triangle_index]
+                    nabla_phi_ref = self.__nabla_phi_ref()
+                    J_inv = self.inverse_mapping_jacobians[triangle_index]
+                    phi = self.__phi(inverse_mapping(
+                        X[:, m]))  # Value of basis functions at x_m
+                    nabla_phi = _np.dot(
+                        J_inv.T,
+                        nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
+                    for k in range(d):
+                        for l in range(d):
+                            for i in range(3):
+                                for j in range(3):
+                                    gi, gj = mesh.t[:,
+                                                    triangle_index][_np.array(
+                                                        [i,
+                                                         j])]  # global indices
                                     C[gi,
-                                      gj] += -0.5 * sigma[k, l] * nabla_phi[
-                                          k, i] * nabla_phi[l, j]
+                                      gj] += Y[k, m] * nabla_phi[k, i] * phi[j]
+                                    if sigma is not None:
+                                        C[gi, gj] += -0.5 * sigma[
+                                            k, l] * nabla_phi[k,
+                                                              i] * nabla_phi[l,
+                                                                             j]
+            else:
+                for m in range(M):
+                    triangle_index = self.__get_Triangle(X[:, m])
+                    if triangle_index == -1:
+                        continue
+                    inverse_mapping = self.inverse_mappings[triangle_index]
+                    nabla_phi_ref = self.__nabla_phi_ref()
+                    J_inv = self.inverse_mapping_jacobians[triangle_index]
+                    phi = self.__phi(inverse_mapping(
+                        X[:, m]))  # Value of basis functions at x_m
+                    nabla_phi = _np.dot(
+                        J_inv.T,
+                        nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
+                    for k in range(d):
+                        for l in range(d):
+                            for i in range(3):
+                                for j in range(3):
+                                    gi, gj = mesh.t[:,
+                                                    triangle_index][_np.array(
+                                                        [i,
+                                                         j])]  # global indices
+                                    C[gi, gj] += (
+                                        Y[k, m] +
+                                        sigma_noise * _np.random.randn()) * (
+                                            nabla_phi[k, i] * phi[j] +
+                                            sigma_noise * _np.random.randn())
+                                    if sigma is not None:
+                                        C[gi, gj] += -0.5 * sigma[k, l] * (
+                                            nabla_phi[k, i] +
+                                            sigma_noise * _np.random.randn()
+                                        ) * (nabla_phi[l, j] +
+                                             sigma_noise * _np.random.randn())
         else:
-            self.calc_G(X, f)  #EDMD
+            self.calc_G(X, f=f, sigma_noise=sigma_noise)  #EDMD
         return C
 
 
