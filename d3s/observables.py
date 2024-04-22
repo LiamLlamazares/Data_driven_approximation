@@ -264,7 +264,7 @@ class FEM_2d(object):
         self.d = Omega._bounds[1, 1]
         self.n2 = int(
             (3 + _np.sqrt(1 + 2 * N) / 2))  # Number of nodes on y axis.
-        self.n1 = 2 * self.n2  # Number of nodes on x axis
+        self.n1 = 2 * (self.n2 - 1) - 1  # Number of nodes on x axis
         self.n = self.n1 * self.n2  # Total number of nodes
         self.nt = 2 * (self.n1 - 1) * (self.n2 - 1)  # Number of triangles
         self.node_coordinates = self.__generate_coordinates_nodes(
@@ -426,6 +426,7 @@ class FEM_2d(object):
         n = self.n
         G = _np.zeros((n, n))
         triangle_mapping = self.__get_Triangles(X)
+        bn = self.boundary_nodes
 
         # Precompute noise if needed
         if sigma_noise is not None:
@@ -450,6 +451,8 @@ class FEM_2d(object):
 
             # Update G matrix in a vectorized manner
             G[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
+        #Remove boundary nodes from rows and columns
+        G = _np.delete(_np.delete(G, bn, axis=0), bn, axis=1)
 
         return G
 
@@ -468,6 +471,7 @@ class FEM_2d(object):
             triangle_mapping = self.__get_Triangles(X)
             Y = b(X)
             C = _np.zeros([n, n])
+            bn = self.boundary_nodes
 
             if sigma_noise is None:
                 for m in range(M):
@@ -527,6 +531,9 @@ class FEM_2d(object):
                                                _np.random.randn())
         else:
             self.calc_G(X, f=f, sigma_noise=sigma_noise)  #EDMD
+
+        #Remove boundary nodes from rows and columns
+        C = _np.delete(_np.delete(C, bn, axis=0), bn, axis=1)
         return C
 
     def __repr__(self):
