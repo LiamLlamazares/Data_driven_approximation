@@ -64,17 +64,13 @@ def gedmdMatrices(X,
 
     if isinstance(psi, observables.FEM_2d) or isinstance(
             psi, observables.FEM_1d):
-        G = psi.calc_G(
-            X, f=None,
-            sigma_noise=sigma_noise)  #Don't use f in Gramm calculation
-        C = psi.calc_C(X, b, sigma=sigma, f=f, sigma_noise=sigma_noise)
-
-        T = None  #Not implemented
-        uniform_norm_psi_A_psi = None  #Not implemented
-        if operator == 'P':
-            C = C.T  #Perron Frobenius operator is the transpose of the Koopman operator
-        A = sp.linalg.solve(G, C.T)
-
+        G, C, T, uniform_norm_psi_A_psi = psi.calc_GCT(X,
+                                                       b,
+                                                       sigma,
+                                                       f=f,
+                                                       sigma_noise=sigma_noise,
+                                                       operator=operator)
+        A = sp.linalg.solve(G, C)
     else:
         if f is None:  #gEDMD
             Y = b(X)
@@ -82,28 +78,23 @@ def gedmdMatrices(X,
             dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
 
             if not (sigma is None):  # stochastic dynamical system
-
                 Z = sigma(X)
-                S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
                 n = PsiX.shape[0]  # number of basis functions
-                if isinstance(psi, observables.FEM_1d):
-                    #For fem the second derivatives are calculated differently  C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
-                    C = PsiX @ dPsiY.T - 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
-                else:
-                    ddPsiX = psi.ddiff(X)  # second-order derivatives
-                    for i in range(n):
-                        dPsiY[i, :] += 0.5 * np.sum(ddPsiX[i, :, :, :] * S,
-                                                    axis=(0, 1))
+                ddPsiX = psi.ddiff(X)  # second-order derivatives
+                S = np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
+                for i in range(n):
+                    dPsiY[i, :] += 0.5 * np.sum(ddPsiX[i, :, :, :] * S,
+                                                axis=(0, 1))
 
             if not (sigma_noise is None):  #Noise if added
                 PsiX += sigma_noise * np.random.randn(*PsiX.shape)
                 dPsiY += sigma_noise * np.random.randn(*dPsiY.shape)
 
-                G = PsiX @ PsiX.T
-                C = PsiX @ dPsiY.T
-                if operator == 'P': C = C.T
-                T = dPsiY @ dPsiY.T
-                uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
+            G = PsiX @ PsiX.T
+            C = PsiX @ dPsiY.T
+            if operator == 'P': C = C.T
+            T = dPsiY @ dPsiY.T
+            uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
         else:  #EDMD
             Y = f(X)
             PsiX = psi(X)
@@ -113,11 +104,11 @@ def gedmdMatrices(X,
                 PsiX += sigma_noise * np.random.randn(*PsiX.shape)
                 PsiY += sigma_noise * np.random.randn(*PsiY.shape)
 
-        G = PsiX @ PsiX.T
-        C = PsiX @ PsiY.T
-        if operator == 'P': C = C.T
-        T = PsiY @ PsiY.T
-        uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
+            G = PsiX @ PsiX.T
+            C = PsiX @ PsiY.T
+            if operator == 'P': C = C.T
+            T = PsiY @ PsiY.T
+            uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
 
         A = sp.linalg.solve(G, C)
 
