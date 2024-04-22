@@ -55,10 +55,7 @@ psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 psi_FEM = observables.FEM_2d(Omega)
-#psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
 psi_FEM.plot_mesh()
-psi_FEM._FEM_2d__get_Triangle(np.array([-1.7, 0.95]))
-psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
 import time
 #set seed
 np.random.seed(0)
