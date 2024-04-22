@@ -21,6 +21,7 @@ import d3s.systems as systems
 from skfem import *
 from skfem.helpers import dot, grad
 import skfem as fem
+import matplotlib.tri as mtri
 
 plt.ion()
 # Constants
@@ -54,10 +55,20 @@ psi_m = observables.monomials(degree_of_monomials)
 variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 psi_FEM = observables.FEM_2d(Omega)
+#psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
+psi_FEM.plot_mesh()
+psi_FEM._FEM_2d__get_Triangle(np.array([-1.7, 0.95]))
+psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
+import time
+
+X = Omega.rand(1000000)
+start = time.time()
+triangle_indices = psi_FEM._FEM_2d__get_Triangles(X)
+end = time.time()
+print('Time to get triangle indices: ', end - start)
 mesh = psi_FEM.mesh
 vertices = mesh.p[:, mesh.t[:, 0]].T
 psi_FEM.inverse_mappings[0](vertices[0])
-X = Omega.rand(1000)
 Sigma = 2 * np.eye(2)
 C = psi_FEM.calc_C(X, b, Sigma, f=None)
 G = psi_FEM.calc_G(X, f=None)

@@ -4,6 +4,9 @@ import math
 import numpy as _np
 from scipy.spatial import distance
 from skfem import MeshTri
+import matplotlib.pyplot as plt
+import matplotlib.tri as mtri
+from numba import jit
 
 
 def identity(x):
@@ -245,70 +248,177 @@ class gaussians(object):
 class FEM_2d(object):
     '''
     Finite element basis functions on uniform mesh with 0 boundary. 
+    Nodes are numbered left to right and right to left.
     Omega = domain
-    n = approximate number of basis functions, equal to number of vertices
+    N = approximate number of basis functions, equal to number of vertices
+      2n nodes are used on x axis and n on y axis. n is Calculated so that non-boundary nodes are approximately n
     '''
 
     def __init__(self, Omega):
         self.d = Omega._bounds.shape[0]
-        n = Omega.numBoxes()
+        N = Omega.numBoxes()
         # Creates a uniform mesh
-        x = _np.linspace(Omega._bounds[0, 0], Omega._bounds[0, 1],
-                         int(_np.sqrt(n)) - 1)
-        y = _np.linspace(Omega._bounds[1, 0], Omega._bounds[1, 1],
-                         int(_np.sqrt(n)) - 1)
-        self.mesh = MeshTri.init_tensor(x,
-                                        y)  # Create the mesh with N vertices
-        #Calculates Jacobian of mappings (linear part)
-        self.inverse_mappings = [
-            self.__inverse_mapping(i) for i in range(self.mesh.t.shape[1])
-        ]
-        self.inverse_mapping_jacobians = [
-            self.__inverse_mapping_jacobian(i)
-            for i in range(self.mesh.t.shape[1])
-        ]
-
-    def __x_in_triangle(self, triangle_index, x):
+        self.a = Omega._bounds[0, 0]
+        self.b = Omega._bounds[0, 1]
+        self.c = Omega._bounds[1, 0]
+        self.d = Omega._bounds[1, 1]
+        self.n2 = int(
+            (3 + _np.sqrt(1 + 2 * N) / 2))  # Number of nodes on y axis.
+        self.n1 = 2 * self.n2  # Number of nodes on x axis
+        self.n = self.n1 * self.n2  # Total number of nodes
+        self.node_coordinates = self.__generate_coordinates_nodes(
+        )  #Coordinates of nodes
+        self.boundary_nodes = self.__boundary_nodes(
+        )  #Indices of boundary nodes
+        self.t = self.__get_triangles()  #Array of triangles
+        # #Calculates Jacobian of mappings (linear part)
+        # self.inverse_mappings = [
+        #     self.__inverse_mapping(i) for i in range(self.mesh.t.shape[1])
+        # ]
+        # self.inverse_mapping_jacobians = [
+        #     self.__inverse_mapping_jacobian(i)
+        #     for i in range(self.mesh.t.shape[1])
+        # ]
+    def __generate_coordinates_nodes(self):
         '''
-        Check if point x is inside the triangle 
+        Generate coordinates of nodes for mesh.
         '''
+        x = _np.linspace(self.a, self.b, self.n1)
+        y = _np.linspace(self.c, self.d, self.n2)
+        nodes = _np.array([_np.array([i, j]) for j in y for i in x])
+        return nodes
 
-        vertices = self.mesh.p[:, self.mesh.t[:, triangle_index]].T
+    def __boundary_nodes(self):
+        '''
+        Returns indices of boundary nodes.
+        '''
+        n1 = self.n1
+        n2 = self.n2
 
-        def sign(p1, p2, p3):
-            return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (
-                p1[1] - p3[1])
+        #Union of all boundary nodes range(0,n1), n1* range(1,n2), (n1-1)*range(1,n2), n1*(n2-1) + range(1,n1-1)
+        return _np.concatenate((range(n1), n1 * _np.arange(1, n2),
+                                n1 * _np.arange(1, n2) + n1 - 1,
+                                n1 * (n2 - 1) + _np.arange(1, n1 - 1)))
 
-        b1 = sign(x, vertices[0], vertices[1]) < 0.0
-        b2 = sign(x, vertices[1], vertices[2]) < 0.0
-        b3 = sign(x, vertices[2], vertices[0]) < 0.0
-
-        return ((b1 == b2) and (b2 == b3))
+    def __get_triangles(self):
+        '''
+        Returns array of triangles, where a triangle is a tuple of 3 indices of nodes. There are 2*(n1-1)*(n2-1) triangles.
+        '''
+        n1 = self.n1
+        n2 = self.n2
+        triangles = _np.empty((2 * (n1 - 1) * (n2 - 1), 3), dtype=int)
+        for j in range(n2 - 1):  # Triangles in row j
+            for i in range(n1 - 1):  # Triangles in column i
+                triangles[2 * (n1 - 1) * j +
+                          2 * i] = _np.array([0, 1, n1 + 1]) + j * n1 + i
+                triangles[2 * (n1 - 1) * j + 2 * i +
+                          1] = _np.array([0, n1, n1 + 1]) + j * n1 + i
+        return triangles
 
     def __get_Triangle(
-            self,
-            x):  # It's possible to get explicit formula using that mesh is uniform
+            self, x
+    ):  # It's possible to get explicit formula using that mesh is uniform
         '''
         Find the triangle that contains the point x.
         '''
-        mesh = self.mesh
-        for i in range(mesh.t.shape[1]):
-            if self.__x_in_triangle(i, x):
-                return i
-        return -1
+        triangles = self.t
+        n1 = self.n1
+        n2 = self.n2
+        a = self.a
+        b = self.b
+        c = self.c
+        d = self.d
+        nodes = self.node_coordinates
+        if x[0] < a or x[0] > b or x[1] < c or x[1] > d:
+            return -1
+        i = int((x[0] - a) / (b - a) * (n1 - 1))
+        j = int((x[1] - c) / (d - c) * (n2 - 1))
+        # Coordinates of corners of box formed by two triangles which contains x
+        corner0 = triangles[2 * (n1 - 1) * j + 2 * i]
+        corner1 = triangles[2 * (n1 - 1) * j + 2 * i + 1]
+        # Check if x is in the upper or lower triangle
+        if (x[1] - corner0[1]) * (corner1[0] - corner0[0]) > (
+                x[0] - corner0[0]) * (corner1[1] - corner0[1]):
+            return 2 * (n1 - 1) * j + 2 * i + 1
+        else:
+            return 2 * (n1 - 1) * j + 2 * i
+
+    @jit(nopython=True)
+    def __get_Triangles(self, X):
+        '''
+        Find the triangles that contain the points in X.
+        '''
+        M = X.shape[1]
+        triangles = self.t
+        n1 = self.n1
+        n2 = self.n2
+        a = self.a
+        b = self.b
+        c = self.c
+        d = self.d
+        nodes = self.node_coordinates
+        triangle_indices = _np.zeros(M, dtype=_np.int32)
+        for m in range(M):
+            x = X[:, m]
+            if x[0] < a or x[0] > b or x[1] < c or x[1] > d:
+                return -1
+            i = int((x[0] - a) / (b - a) * (n1 - 1))
+            j = int((x[1] - c) / (d - c) * (n2 - 1))
+            # Coordinates of corners of box formed by two triangles which contains x
+            corner0 = triangles[2 * (n1 - 1) * j + 2 * i]
+            corner1 = triangles[2 * (n1 - 1) * j + 2 * i + 1]
+            if (x[1] - corner0[1]) * (corner1[0] - corner0[0]) > (
+                    x[0] - corner0[0]) * (corner1[1] - corner0[1]):
+                triangle_indices[m] = 2 * (n1 - 1) * j + 2 * i + 1
+            else:
+                triangle_indices[m] = 2 * (n1 - 1) * j + 2 * i
+        return triangle_indices
+
+    def plot_mesh(self):
+        '''
+        Plot the mesh with triangles and nodes numbered.
+        '''
+        # Create a triangulation object
+        triangulation = mtri.Triangulation(self.node_coordinates[:, 0],
+                                           self.node_coordinates[:, 1], self.t)
+
+        # Plot the triangulation
+        plt.figure()
+        plt.triplot(triangulation, 'go-')
+
+        # Annotate the triangles
+        for i in range(self.t.shape[0]):
+            # Calculate the centroid of the triangle
+            centroid = _np.mean(self.node_coordinates[self.t[i, :]], axis=0)
+            plt.text(centroid[0],
+                     centroid[1],
+                     f'T{i}',
+                     ha='center',
+                     va='center',
+                     color='red')
+
+        # Annotate the nodes
+        for i in range(self.node_coordinates.shape[0]):
+            plt.text(self.node_coordinates[i, 0],
+                     self.node_coordinates[i, 1],
+                     f'N{i}',
+                     ha='right',
+                     va='bottom')
+
+        plt.show()
 
     def __inverse_mapping(self, triangle_index):
         '''
         Returns function that given mesh coordinates of points in triangle returns local (reference) coordinates.
         Sends v0,v1,v2 to (0,0), (1,0), (0,1).
         '''
-        mesh = self.mesh
+        triangles = self.t
 
         def inverse_mapping(x):
-            vertices = mesh.p[:, mesh.t[:, triangle_index]].T
-            A = _np.vstack(
-                (vertices[1] - vertices[0], vertices[2] - vertices[0])).T
-            x_reference = _np.linalg.solve(A, x - vertices[0])
+            nodes = self.node_coordinates[
+                triangles[triangle_index]]  # coordinates of nodes on triangle
+            A = _np.vstack((nodes[1] - nodes[0], nodes[2] - nodes[0])).T
+            x_reference = _np.linalg.solve(A, x - nodes[0])
             return x_reference
 
         return inverse_mapping
@@ -318,8 +428,8 @@ class FEM_2d(object):
         Returns Jacobian of mapping from mesh to reference coordinates.
         Linear part of function that sends v0,v1,v2 to (0,0), (1,0), (0,1).
         '''
-        mesh = self.mesh
-        vertices = mesh.p[:, mesh.t[:, triangle_index]].T
+        triangles = self.t
+        vertices = self.node_coordinates[triangles[triangle_index]]
         A_linear = _np.vstack(
             (vertices[1] - vertices[0], vertices[2] - vertices[0])).T
         return _np.linalg.inv(A_linear)
@@ -344,7 +454,7 @@ class FEM_2d(object):
         if f is None:
             f = identity
         M = X.shape[1]
-        n = self.mesh.p.shape[1]
+        n = self.n
         G = _np.zeros([n, n])
 
         if sigma_noise is None:
