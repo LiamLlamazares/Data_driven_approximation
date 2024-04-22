@@ -343,7 +343,6 @@ class FEM_2d(object):
         else:
             return 2 * (n1 - 1) * j + 2 * i
 
-    @jit(nopython=True)
     def __get_Triangles(self, X):
         '''
         Find the triangles that contain the points in X.

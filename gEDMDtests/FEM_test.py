@@ -61,7 +61,7 @@ psi_FEM._FEM_2d__get_Triangle(np.array([-1.7, 0.95]))
 psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
 import time
 
-X = Omega.rand(1000000)
+X = Omega.rand(100000)
 start = time.time()
 triangle_indices = psi_FEM._FEM_2d__get_Triangles(X)
 end = time.time()
