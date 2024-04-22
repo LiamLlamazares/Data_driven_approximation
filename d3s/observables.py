@@ -318,31 +318,29 @@ class FEM_2d(object):
         '''
         Find the triangles that contain the points in X.
         '''
-        M = X.shape[1]
-        triangles = self.t
-        v = self.node_coordinates
-        n1 = self.n1
-        n2 = self.n2
-        a = self.a
-        b = self.b
-        c = self.c
-        d = self.d
-        nodes = self.node_coordinates
-        triangle_indices = _np.zeros(M, dtype=_np.int32)
-        for m in range(M):
-            x = X[:, m]
-            if x[0] < a or x[0] > b or x[1] < c or x[1] > d:
-                return -1
-            i = int((x[0] - a) / (b - a) * (n1 - 1))
-            j = int((x[1] - c) / (d - c) * (n2 - 1))
-            # Coordinates of corners of box formed by two triangles which contains x
-            corner0 = v[triangles[2 * (n1 - 1) * j + 2 * i][0]]
-            corner1 = v[triangles[2 * (n1 - 1) * j + 2 * i + 1][2]]
-            if (x[1] - corner0[1]) * (corner1[0] - corner0[0]) > (
-                    x[0] - corner0[0]) * (corner1[1] - corner0[1]):
-                triangle_indices[m] = 2 * (n1 - 1) * j + 2 * i + 1
-            else:
-                triangle_indices[m] = 2 * (n1 - 1) * j + 2 * i
+        # Check bounds
+        within_bounds_x = (X[0] >= self.a) & (X[0] <= self.b)
+        within_bounds_y = (X[1] >= self.c) & (X[1] <= self.d)
+        within_bounds = within_bounds_x & within_bounds_y
+
+        # Compute indices only for points within bounds
+        i = ((X[0][within_bounds] - self.a) / (self.b - self.a) *
+             (self.n1 - 1)).astype(int)
+        j = ((X[1][within_bounds] - self.c) / (self.d - self.c) *
+             (self.n2 - 1)).astype(int)
+        base_index = 2 * (self.n1 - 1) * j + 2 * i
+
+        # Determine which triangle in the cell contains each point
+        triangle_indices = _np.full(X[0].shape,
+                                    -1)  # Initialize all indices to -1
+        # CHecks whether in upper or lower triangle in cell
+        triangle_check = (X[1][within_bounds] - self.node_coordinates[self.t[base_index, 0], 1]) * \
+                        (self.node_coordinates[self.t[base_index + 1, 2], 0] - self.node_coordinates[self.t[base_index, 0], 0]) > \
+                        (X[0][within_bounds] - self.node_coordinates[self.t[base_index, 0], 0]) * \
+                        (self.node_coordinates[self.t[base_index + 1, 2], 1] - self.node_coordinates[self.t[base_index, 0], 1])
+        triangle_indices[within_bounds] = _np.where(triangle_check,
+                                                    base_index + 1, base_index)
+
         return triangle_indices
 
     def plot_mesh(self):
