@@ -66,16 +66,16 @@ matrix_errors_average = np.zeros(
 
 for m in range(number_of_runs):
     X_exact = Omega.rand(M)
-    A_exact_m, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_m, b, Omega,
-                                                 sigma)
-    A_exact_g, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_g, b, Omega,
-                                                 sigma)
+    A_exact_m, _, _, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_m, b,
+                                                       Omega, sigma)
+    A_exact_g, _, _, _, _ = gedmd_helper.gedmdMatrices(X_exact, psi_g, b,
+                                                       Omega, sigma)
     A_exact_m__matrix_norm = np.linalg.norm(A_exact_m, ord=2)
     A_exact_g__matrix_norm = np.linalg.norm(A_exact_g, ord=2)
     for i in range(number_of_loops):
         X = Omega.rand(data_points_number[i])
-        A_m, _, _ = gedmd_helper.gedmdMatrices(X, psi_m, b, Omega, sigma)
-        A_g, _, _ = gedmd_helper.gedmdMatrices(X, psi_g, b, Omega, sigma)
+        A_m, _, _, _, _ = gedmd_helper.gedmdMatrices(X, psi_m, b, Omega, sigma)
+        A_g, _, _, _, _ = gedmd_helper.gedmdMatrices(X, psi_g, b, Omega, sigma)
         matrix_error_m = np.linalg.norm(A_exact_m - A_m,
                                         ord=2) / A_exact_m__matrix_norm
         matrix_error_g = np.linalg.norm(A_exact_g - A_g,

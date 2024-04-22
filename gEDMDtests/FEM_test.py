@@ -82,14 +82,14 @@ start = time.time()
 C = psi_FEM.calc_C(X, b, Sigma, f=None)
 end = time.time()
 print('Time to calculate C: ', end - start)
-A1, G1, C1, _ = gedmd_helper.gedmdMatrices(X,
-                                           psi_FEM,
-                                           b,
-                                           Omega,
-                                           sigma=None,
-                                           f=None,
-                                           sigma_noise=0,
-                                           operator='K')
+A1, G1, C1, _, _ = gedmd_helper.gedmdMatrices(X,
+                                              psi_FEM,
+                                              b,
+                                              Omega,
+                                              sigma=None,
+                                              f=None,
+                                              sigma_noise=0,
+                                              operator='K')
 observables_list = [psi_m, psi_g]
 
 # or, save to external file:

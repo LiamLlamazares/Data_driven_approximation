@@ -57,7 +57,7 @@ def gedmdMatrices(X,
     
     X=Omega.rand(10000)
     psi = observables.monomials(i)
-    A, G, C, T = gedmd_helper.gedmdMatrices(Xexact, X, psi, b, Omega=Omega)
+    A, G, C, T,  uniform_norm_psi_A_psi = gedmd_helper.gedmdMatrices(Xexact, X, psi, b, Omega=Omega)
 
     ```
     """
@@ -218,13 +218,13 @@ gedmd_helper.plot_errors_data_limit(M,
 
     for type in range(types_of_observables_number):
         # Exacts operators are the same over all runs to save time
-        A_ex, _, _, _ = gedmdMatrices(X_exact,
-                                      observables_list[type],
-                                      b,
-                                      Omega,
-                                      sigma,
-                                      f,
-                                      operator=operator)
+        A_ex, _, _, _, _ = gedmdMatrices(X_exact,
+                                         observables_list[type],
+                                         b,
+                                         Omega,
+                                         sigma,
+                                         f,
+                                         operator=operator)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
 
@@ -233,14 +233,14 @@ gedmd_helper.plot_errors_data_limit(M,
                   observables_names[type])
             for i in range(number_of_loops_data_points):
                 X = Omega.rand(data_points_number[i])
-                A, _, _, _, = gedmdMatrices(X,
-                                            observables_list[type],
-                                            b,
-                                            Omega,
-                                            sigma,
-                                            f,
-                                            sigma_noise=sigma_noise,
-                                            operator=operator)
+                A, _, _, _, _ = gedmdMatrices(X,
+                                              observables_list[type],
+                                              b,
+                                              Omega,
+                                              sigma,
+                                              f,
+                                              sigma_noise=sigma_noise,
+                                              operator=operator)
                 matrix_errors[i, type, m] = np.linalg.norm(
                     A_exact[type] - A, ord=2) / A_exact_matrix_norm[type]
 

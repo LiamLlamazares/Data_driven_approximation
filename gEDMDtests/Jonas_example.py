@@ -72,7 +72,7 @@ def f(X):
 
 
 # Gets matrix
-A, _, _, _ = gedmd_helper.gedmdMatrices(
+A, _, _, _, _ = gedmd_helper.gedmdMatrices(
     X,
     indicators,
     1,
