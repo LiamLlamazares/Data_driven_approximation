@@ -61,14 +61,17 @@ psi_FEM._FEM_2d__get_Triangle(np.array([-1.7, 0.95]))
 psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
 import time
 
-X = Omega.rand(100000)
+X = Omega.rand(1000)
 start = time.time()
 triangle_indices = psi_FEM._FEM_2d__get_Triangles(X)
 end = time.time()
 print('Time to get triangle indices: ', end - start)
-mesh = psi_FEM.mesh
-vertices = mesh.p[:, mesh.t[:, 0]].T
-psi_FEM.inverse_mappings[0](vertices[0])
+vertices = psi_FEM.node_coordinates
+triangles = psi_FEM.t
+k = 2
+[psi_FEM.inverse_mappings[k](vertices[triangles[k, i]])
+ for i in range(3)]  # Should return [0,0],[1,0],[0,1]
+
 Sigma = 2 * np.eye(2)
 C = psi_FEM.calc_C(X, b, Sigma, f=None)
 G = psi_FEM.calc_G(X, f=None)

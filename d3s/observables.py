@@ -266,19 +266,18 @@ class FEM_2d(object):
             (3 + _np.sqrt(1 + 2 * N) / 2))  # Number of nodes on y axis.
         self.n1 = 2 * self.n2  # Number of nodes on x axis
         self.n = self.n1 * self.n2  # Total number of nodes
+        self.nt = 2 * (self.n1 - 1) * (self.n2 - 1)  # Number of triangles
         self.node_coordinates = self.__generate_coordinates_nodes(
         )  #Coordinates of nodes
         self.boundary_nodes = self.__boundary_nodes(
         )  #Indices of boundary nodes
         self.t = self.__get_triangles()  #Array of triangles
-        # #Calculates Jacobian of mappings (linear part)
-        # self.inverse_mappings = [
-        #     self.__inverse_mapping(i) for i in range(self.mesh.t.shape[1])
-        # ]
-        # self.inverse_mapping_jacobians = [
-        #     self.__inverse_mapping_jacobian(i)
-        #     for i in range(self.mesh.t.shape[1])
-        # ]
+        #Calculates Jacobian of mappings (linear part)
+        self.inverse_mappings = _np.array(
+            [self.__inverse_mapping(i) for i in range(self.nt)])
+        self.inverse_mapping_jacobians = _np.array(
+            [self.__inverse_mapping_jacobian(i) for i in range(self.nt)])
+
     def __generate_coordinates_nodes(self):
         '''
         Generate coordinates of nodes for mesh.
@@ -455,36 +454,39 @@ class FEM_2d(object):
         M = X.shape[1]
         n = self.n
         G = _np.zeros([n, n])
+        triangle_mapping = self.__get_Triangles(
+            X)  #gets triangle to which each point belongs
 
         if sigma_noise is None:
             for m in range(M):
-                triangle_index = self.__get_Triangle(X[:, m])
+                triangle_index = triangle_mapping[m]
                 if triangle_index == -1:
                     continue
                 inverse_mapping = self.inverse_mappings[triangle_index]
                 phi = self.__phi(inverse_mapping(X[:, m]))
                 phiY = self.__phi(inverse_mapping(f(
                     X[:, m])))  #Used for EDMD only to calculate C matrix
-                global_indices = self.mesh.t[:, triangle_index]
+                gi = self.t[
+                    triangle_index, :]  #Global indices for triangle. What index in G corresponds to current triangle
                 for i in range(3):
                     for j in range(3):
-                        G[global_indices[i],
-                          global_indices[j]] += phi[i] * phiY[j]
+                        G[gi[i], gi[j]] += phi[i] * phiY[j]
         else:
             for m in range(M):
-                triangle_index = self.__get_Triangle(X[:, m])
+                triangle_index = triangle_mapping[m]
                 if triangle_index == -1:
                     continue
                 inverse_mapping = self.inverse_mappings[triangle_index]
                 phi = self.__phi(inverse_mapping(X[:, m]))
                 phiY = self.__phi(inverse_mapping(f(
                     X[:, m])))  #Used for EDMD only to calculate C matrix
-                global_indices = self.mesh.t[:, triangle_index]
+                gi = self.t[triangle_index, :]
                 for i in range(3):
                     for j in range(3):
-                        G[global_indices[i], global_indices[j]] += (
-                            phi[i] + sigma_noise * _np.random.randn()) * (
-                                phiY[j] + sigma_noise * _np.random.randn())
+                        G[gi[i],
+                          gi[j]] += (phi[i] + sigma_noise * _np.random.randn()
+                                     ) * (phiY[j] +
+                                          sigma_noise * _np.random.randn())
         return G
 
     def calc_C(self, X, b, sigma, f=None, sigma_noise=None):
@@ -497,8 +499,7 @@ class FEM_2d(object):
         '''
         if f is None:  #gEDMD
             M = X.shape[1]
-            mesh = self.mesh
-            n = mesh.p.shape[1]
+            n = self.n
             d = self.d
             Y = b(X)
             C = _np.zeros([n, n])
@@ -520,10 +521,8 @@ class FEM_2d(object):
                         for l in range(d):
                             for i in range(3):
                                 for j in range(3):
-                                    gi, gj = mesh.t[:,
-                                                    triangle_index][_np.array(
-                                                        [i,
-                                                         j])]  # global indices
+                                    gi, gj = self.t[triangle_index, :][
+                                        _np.array([i, j])]  # global indices
                                     C[gi,
                                       gj] += Y[k, m] * nabla_phi[k, i] * phi[j]
                                     if sigma is not None:
@@ -544,25 +543,23 @@ class FEM_2d(object):
                     nabla_phi = _np.dot(
                         J_inv.T,
                         nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
+                    gi = self.t[triangle_index, :]  # global indices
                     for k in range(d):
                         for l in range(d):
                             for i in range(3):
                                 for j in range(3):
-                                    gi, gj = mesh.t[:,
-                                                    triangle_index][_np.array(
-                                                        [i,
-                                                         j])]  # global indices
-                                    C[gi, gj] += (
+                                    C[gi[i], gi[j]] += (
                                         Y[k, m] +
                                         sigma_noise * _np.random.randn()) * (
                                             nabla_phi[k, i] * phi[j] +
                                             sigma_noise * _np.random.randn())
                                     if sigma is not None:
-                                        C[gi, gj] += -0.5 * sigma[k, l] * (
-                                            nabla_phi[k, i] +
-                                            sigma_noise * _np.random.randn()
-                                        ) * (nabla_phi[l, j] +
-                                             sigma_noise * _np.random.randn())
+                                        C[gi[i],
+                                          gi[j]] += -0.5 * sigma[k, l] * (
+                                              nabla_phi[k, i] +
+                                              sigma_noise * _np.random.randn()
+                                          ) * (nabla_phi[l, j] + sigma_noise *
+                                               _np.random.randn())
         else:
             self.calc_G(X, f=f, sigma_noise=sigma_noise)  #EDMD
         return C
