@@ -472,12 +472,13 @@ class FEM_2d(object):
             M = X.shape[1]
             n = self.n
             d = self.d
+            triangle_mapping = self.__get_Triangles(X)
             Y = b(X)
             C = _np.zeros([n, n])
 
             if sigma_noise is None:
                 for m in range(M):
-                    triangle_index = self.__get_Triangle(X[:, m])
+                    triangle_index = triangle_mapping[m]
                     if triangle_index == -1:
                         continue
                     inverse_mapping = self.inverse_mappings[triangle_index]
@@ -503,7 +504,7 @@ class FEM_2d(object):
                                                                              j]
             else:
                 for m in range(M):
-                    triangle_index = self.__get_Triangle(X[:, m])
+                    triangle_index = triangle_mapping[m]
                     if triangle_index == -1:
                         continue
                     inverse_mapping = self.inverse_mappings[triangle_index]
