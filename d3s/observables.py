@@ -536,6 +536,12 @@ class FEM_2d(object):
         C = _np.delete(_np.delete(C, bn, axis=0), bn, axis=1)
         return C
 
+    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
+        '''
+        Calculate the mass matrix G given the data points X using optimized methods.
+         Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
+        '''
+
     def __repr__(self):
         return '2D Finite element basis functions on uniform mesh.'
 
@@ -604,6 +610,54 @@ class FEM_1d(object):
                 y[i, 0, j] = -1 / h
 
         return y
+
+    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
+        '''
+        Calculate the mass matrix G given the data points X using optimized methods.
+         Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
+        '''
+        #Calculate mass matrix G
+        PsiX = self(X)
+        if not (sigma_noise is None):  #Noise if added
+            PsiX += sigma_noise * _np.random.randn(*PsiX.shape)
+        G = PsiX @ PsiX.T
+        #Calculate structure matrix C
+        if f is None:  #gEDMD
+            Y = b(X)
+            dPsiY = _np.einsum('ijk,jk->ik', self.diff(X), Y)  #b(x)phi'(x)
+
+            if not (sigma is None):  # stochastic dynamical system
+                Z = sigma(X)
+                S = _np.einsum('ijk,ljk->ilk', Z, Z)  # sigma \cdot sigma^T
+                n = PsiX.shape[0]  # number of basis functions
+                #For fem the second derivatives are calculated differently  C_ij = b\cdot \nabla \psi + 1/2 sigma^2 \sum_k phi_i'(x_k) phi_j'(x_k)
+                C = PsiX @ dPsiY.T - 0.5 * S[0, 0, 0] * dPsiY @ dPsiY.T
+
+                #Not defined for second order operator and piecewise linear basis functions#
+                T = None
+                uniform_norm_psi_A_psi = None
+                ##
+
+            if not (sigma_noise is None):  #Noise if added
+                PsiX += sigma_noise * _np.random.randn(*PsiX.shape)
+                dPsiY += sigma_noise * _np.random.randn(*dPsiY.shape)
+
+        else:  #EDMD
+            Y = f(X)
+            PsiY = self(Y)
+
+            if not (sigma_noise
+                    is None):  #Noise if added (already added to PsiX)
+                PsiY += sigma_noise * _np.random.randn(*PsiY.shape)
+
+            C = PsiX @ PsiY.T  #C_ij = \sum_k phi_i(x_k) phi_j(y_k)
+            T = PsiY @ PsiY.T  #T_ij = \sum_k phi_i(y_k) phi_j(y_k)
+            uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
+
+        if operator == 'P':
+            C = C.T  #Perron Frobenius operator is transpose of Koopman operator
+
+        return G, C, T, uniform_norm_psi_A_psi
 
     def __repr__(self):
         return 'Finite element basis functions on uniform mesh.'

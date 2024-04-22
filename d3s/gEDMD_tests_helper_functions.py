@@ -69,9 +69,11 @@ def gedmdMatrices(X,
         C = psi.calc_C(X, b, sigma=sigma, f=f, sigma_noise=sigma_noise)
 
         T = None  #Not implemented
+        uniform_norm_psi_A_psi = None  #Not implemented
         if operator == 'P':
             C = C.T  #Perron Frobenius operator is the transpose of the Koopman operator
         A = sp.linalg.solve(G, C.T)
+
     else:
         if f is None:  #gEDMD
             Y = b(X)
@@ -100,7 +102,7 @@ def gedmdMatrices(X,
                 C = PsiX @ dPsiY.T
                 if operator == 'P': C = C.T
                 T = dPsiY @ dPsiY.T
-                # uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
+                uniform_norm_psi_A_psi = max(PsiX.max(), dPsiY.max())
         else:  #EDMD
             Y = f(X)
             PsiX = psi(X)
@@ -110,15 +112,15 @@ def gedmdMatrices(X,
                 PsiX += sigma_noise * np.random.randn(*PsiX.shape)
                 PsiY += sigma_noise * np.random.randn(*PsiY.shape)
 
-            G = PsiX @ PsiX.T
-            C = PsiX @ PsiY.T
-            if operator == 'P': C = C.T
-            T = PsiY @ PsiY.T
-            # uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
+        G = PsiX @ PsiX.T
+        C = PsiX @ PsiY.T
+        if operator == 'P': C = C.T
+        T = PsiY @ PsiY.T
+        uniform_norm_psi_A_psi = max(PsiX.max(), PsiY.max())
 
         A = sp.linalg.solve(G, C)
 
-    return A, G, C, T
+    return A, G, C, T, uniform_norm_psi_A_psi
 
 
 def plot_errors_data_limit(
@@ -419,11 +421,13 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_dictionary_functions,
                             Omega._bounds[0, 0]) / Omega._boxes[0] / 2
                 dictionary = observables.gaussians(Omega, sigma=variance)
                 print('Gaussians created', dictionary.length())
-            elif observables_names[type] == 'FEM':
+            elif observables_names[type] == 'FEM_1D':
                 dictionary = observables.FEM_1d(Omega._bounds[0, 0],
                                                 Omega._bounds[0, 1],
                                                 Omega._boxes[0])
-                print('FEM created', dictionary.n)
+            elif observables_names[type] == 'FEM_2d':
+                dictionary = observables.FEM_2d(Omega)
+                print('FEM2d created', dictionary.n)
 
         # Exacts operators are the same over all runs to save time
 
