@@ -299,49 +299,6 @@ class FEM_2d(object):
                                 n1 * _np.arange(1, n2) + n1 - 1,
                                 n1 * (n2 - 1) + _np.arange(1, n1 - 1)))
 
-    def __get_triangles(self):
-        '''
-        Returns array of triangles, where a triangle is a tuple of 3 indices of nodes. There are 2*(n1-1)*(n2-1) triangles.
-        '''
-        n1 = self.n1
-        n2 = self.n2
-        triangles = _np.empty((2 * (n1 - 1) * (n2 - 1), 3), dtype=int)
-        for j in range(n2 - 1):  # Triangles in row j
-            for i in range(n1 - 1):  # Triangles in column i
-                triangles[2 * (n1 - 1) * j +
-                          2 * i] = _np.array([0, 1, n1 + 1]) + j * n1 + i
-                triangles[2 * (n1 - 1) * j + 2 * i +
-                          1] = _np.array([0, n1, n1 + 1]) + j * n1 + i
-        return triangles
-
-    def __get_Triangle(
-            self, x
-    ):  # It's possible to get explicit formula using that mesh is uniform
-        '''
-        Find the triangle that contains the point x.
-        '''
-        triangles = self.t
-        n1 = self.n1
-        n2 = self.n2
-        a = self.a
-        b = self.b
-        c = self.c
-        d = self.d
-        nodes = self.node_coordinates
-        if x[0] < a or x[0] > b or x[1] < c or x[1] > d:
-            return -1
-        i = int((x[0] - a) / (b - a) * (n1 - 1))
-        j = int((x[1] - c) / (d - c) * (n2 - 1))
-        # Coordinates of corners of box formed by two triangles which contains x
-        corner0 = triangles[2 * (n1 - 1) * j + 2 * i]
-        corner1 = triangles[2 * (n1 - 1) * j + 2 * i + 1]
-        # Check if x is in the upper or lower triangle
-        if (x[1] - corner0[1]) * (corner1[0] - corner0[0]) > (
-                x[0] - corner0[0]) * (corner1[1] - corner0[1]):
-            return 2 * (n1 - 1) * j + 2 * i + 1
-        else:
-            return 2 * (n1 - 1) * j + 2 * i
-
     def __get_Triangles(self, X):
         '''
         Find the triangles that contain the points in X.
