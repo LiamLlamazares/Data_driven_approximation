@@ -286,7 +286,7 @@ gedmd_helper.plot_errors_data_limit(M,
         'matrix_errors_average': matrix_errors_average,
         'matrix_errors_confidence_interval': matrix_errors_confidence_interval,
         'observables_names': observables_names,
-        'observables_list': observables_list,
+        # 'observables_list': observables_list,
         'title': path
     }
     np.savez('gEDMDtests/Simulation_data/Data_Limit/' + path + '.npz', **data)

@@ -285,7 +285,9 @@ class FEM_2d(object):
 
         return ((b1 == b2) and (b2 == b3))
 
-    def __get_Triangle(self, x):
+    def __get_Triangle(
+            self,
+            x):  # It's possible to get explicit formula using that mesh is uniform
         '''
         Find the triangle that contains the point x.
         '''
