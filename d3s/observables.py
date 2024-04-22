@@ -427,6 +427,11 @@ class FEM_2d(object):
         G = _np.zeros((n, n))
         triangle_mapping = self.__get_Triangles(X)
 
+        # Precompute noise if needed
+        if sigma_noise is not None:
+            noise_phi = sigma_noise * _np.random.randn(M, 3)
+            noise_phiY = sigma_noise * _np.random.randn(M, 3)
+
         for m in range(M):
             triangle_index = triangle_mapping[m]
             if triangle_index == -1:
@@ -438,8 +443,6 @@ class FEM_2d(object):
                                                                         m])))
 
             if sigma_noise is not None:
-                noise_phi = sigma_noise * _np.random.randn(M, 3)
-                noise_phiY = sigma_noise * _np.random.randn(M, 3)
                 phi += noise_phi[m]
                 phiY += noise_phiY[m]
 
