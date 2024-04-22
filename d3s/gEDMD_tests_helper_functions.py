@@ -62,7 +62,8 @@ def gedmdMatrices(X,
     ```
     """
 
-    if isinstance(psi, observables.FEM_2d):
+    if isinstance(psi, observables.FEM_2d) or isinstance(
+            psi, observables.FEM_1d):
         G = psi.calc_G(
             X, f=None,
             sigma_noise=sigma_noise)  #Don't use f in Gramm calculation

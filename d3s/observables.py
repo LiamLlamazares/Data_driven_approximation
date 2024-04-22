@@ -415,46 +415,111 @@ class FEM_2d(object):
         '''
         return _np.array([[-1, 1, 0], [-1, 0, 1]])
 
-    def calc_G(self, X, f=None, sigma_noise=None):
+    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
         '''
         Calculate the mass matrix G given the data points X using optimized methods.
         '''
-        if f is None:
-            f = lambda x: x  # Identity function if no function is provided.
 
         M = X.shape[1]
         n = self.n
-        G = _np.zeros((n, n))
+        d = self.d
         triangle_mapping = self.__get_Triangles(X)
+        Y = b(X)
+        G = _np.zeros([n, n])
+        C = _np.zeros([n, n])
         bn = self.boundary_nodes
 
-        # Precompute noise if needed
-        if sigma_noise is not None:
-            noise_phi = sigma_noise * _np.random.randn(M, 3)
-            noise_phiY = sigma_noise * _np.random.randn(M, 3)
-
-        for m in range(M):
-            triangle_index = triangle_mapping[m]
-            if triangle_index == -1:
-                continue
-
-            x_local = self.inverse_mappings[triangle_index](X[:, m])
-            phi = self.__phi(x_local)
-            phiY = self.__phi(self.inverse_mappings[triangle_index](f(X[:,
-                                                                        m])))
-
+        if f is None:  #gEDMD, we do note calculate T
+            T = None
+            uniform_norm_psi_A_psi = None
+            # Precompute noise if needed
             if sigma_noise is not None:
-                phi += noise_phi[m]
-                phiY += noise_phiY[m]
+                noise_phi = sigma_noise * _np.random.randn(M, 3)
+                noise_C = sigma_noise * _np.random.randn(M, 3, 3)
 
-            gi = self.t[triangle_index]  # Global indices for the triangle
+            for m in range(M):
+                triangle_index = triangle_mapping[m]
+                if triangle_index == -1:
+                    continue
 
-            # Update G matrix in a vectorized manner
-            G[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
-        #Remove boundary nodes from rows and columns
+                inverse_mapping = self.inverse_mappings[triangle_index]
+                x_local = inverse_mapping(X[:, m])
+                phi = self.__phi(x_local)  # Value of basis functions at x_m
+                if sigma_noise is not None:
+                    phi += noise_phi[m]
+
+                gi = self.t[triangle_index]  # Global indices for the triangle
+
+                # Update G matrix in a vectorized manner
+                G[_np.ix_(gi, gi)] += _np.outer(
+                    phi, phi
+                )  # G_{gii,gij}= phi_i phi_j (outer product of u,v is u_iv_j matrix)
+
+                ##Calculation of C##
+
+                nabla_phi_ref = self.__nabla_phi_ref()
+                nabla_phi_ref = self.__nabla_phi_ref()
+                J_inv = self.inverse_mapping_jacobians[triangle_index]
+                nabla_phi = _np.dot(
+                    J_inv.T,
+                    nabla_phi_ref)  # size d x 3 [partial_xi phi_j(x_m)]
+                for k in range(d):
+                    for l in range(d):
+                        C[_np.ix_(gi, gi)] += Y[k, m] * _np.outer(
+                            nabla_phi[k], phi)  # b\cdot nabla phi_i \phi_j
+                        if sigma is not None:
+                            C[_np.ix_(gi,
+                                      gi)] += -0.5 * sigma[k, l] * _np.outer(
+                                          nabla_phi[k], nabla_phi[l])
+
+                if sigma_noise is not None:
+                    C[_np.ix_(gi, gi)] += noise_C[m]
+
+        else:  #EDMD
+            # Precompute noise if needed
+            if sigma_noise is not None:
+                noise_phi = sigma_noise * _np.random.randn(M, 3)
+                noise_phiY = sigma_noise * _np.random.randn(M, 3)
+
+            #Need to store values of psi(X) and psi(f(X)) for all data points to calculate uniform norm
+            PsiX_max = _np.zeros(M)
+            PsiY_max = _np.zeros(M)
+
+            for m in range(M):
+                triangle_index = triangle_mapping[m]
+                if triangle_index == -1:
+                    continue
+
+                x_local = self.inverse_mappings[triangle_index](X[:, m])
+                phi = self.__phi(x_local)
+                phiY = self.__phi(self.inverse_mappings[triangle_index](f(
+                    X[:, m])))
+
+                if sigma_noise is not None:
+                    phi += noise_phi[m]
+                    phiY += noise_phiY[m]
+
+                PsiX_max[m] = phi.max()
+                PsiY_max[m] = phiY.max()
+
+                gi = self.t[triangle_index]  # Global indices for the triangle
+
+                # Update matrices
+                G[_np.ix_(gi, gi)] += _np.outer(phi, phi)
+                C[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
+                T[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
+                #Remove boundary from T
+                T = _np.delete(_np.delete(T, bn, axis=0), bn, axis=1)
+                uniform_norm_psi_A_psi = uniform_norm_psi_A_psi = max(
+                    PsiX_max.max(), PsiY_max.max())
+
+        #Remove boundary nodes from rows and columns of C,G
         G = _np.delete(_np.delete(G, bn, axis=0), bn, axis=1)
+        C = _np.delete(_np.delete(C, bn, axis=0), bn, axis=1)
+        if operator == 'P':
+            C = C.T  #Perron Frobenius operator is the transpose of the Koopman operator
 
-        return G
+        return C, G, T, uniform_norm_psi_A_psi
 
     def calc_C(self, X, b, sigma, f=None, sigma_noise=None):
         '''
@@ -537,6 +602,21 @@ class FEM_2d(object):
         return C
 
     def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
+        '''
+        Calculate the mass matrix G given the data points X using optimized methods.
+         Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
+        '''
+        #Calculate mass matrix G
+        G = self.calc_G(X, f, sigma_noise)
+        #Calculate structure matrix C
+        C = self.calc_C(X, b, sigma, f, sigma_noise)
+        if operator == 'P':
+            C = C.T  #Perron Frobenius operator is transpose of Koopman operator
+
+        return G, C, T, uniform_norm_psi_A_psi
+
+    def __repr__(self):
+        return 'Finite element basis functions on uniform mesh.'
         '''
         Calculate the mass matrix G given the data points X using optimized methods.
          Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
