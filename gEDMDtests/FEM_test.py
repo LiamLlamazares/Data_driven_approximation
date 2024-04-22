@@ -38,7 +38,7 @@ min_number_of_data_points = 250
 # ########################################
 # define domain
 bounds = np.array([[-2, 2], [-1, 1]])
-boxes = np.array([9, 5])
+boxes = np.array([2, 2])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -60,12 +60,16 @@ psi_FEM.plot_mesh()
 psi_FEM._FEM_2d__get_Triangle(np.array([-1.7, 0.95]))
 psi_FEM._FEM_2d__get_Triangle(np.array([0.5, 0.5]))
 import time
+#set seed
+np.random.seed(0)
 
-X = Omega.rand(1000)
+X = Omega.rand(100000)
 start = time.time()
 triangle_indices = psi_FEM._FEM_2d__get_Triangles(X)
 end = time.time()
 print('Time to get triangle indices: ', end - start)
+triangle_indices[0:3]
+X[:, 0:3]
 vertices = psi_FEM.node_coordinates
 triangles = psi_FEM.t
 k = 2
@@ -73,8 +77,14 @@ k = 2
  for i in range(3)]  # Should return [0,0],[1,0],[0,1]
 
 Sigma = 2 * np.eye(2)
-C = psi_FEM.calc_C(X, b, Sigma, f=None)
+start = time.time()
 G = psi_FEM.calc_G(X, f=None)
+end = time.time()
+print('Time to calculate G: ', end - start)
+start = time.time()
+C = psi_FEM.calc_C(X, b, Sigma, f=None)
+end = time.time()
+print('Time to calculate C: ', end - start)
 A1, G1, C1, _ = gedmd_helper.gedmdMatrices(X,
                                            psi_FEM,
                                            b,

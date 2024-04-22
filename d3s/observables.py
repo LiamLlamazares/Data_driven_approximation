@@ -348,6 +348,7 @@ class FEM_2d(object):
         '''
         M = X.shape[1]
         triangles = self.t
+        v = self.node_coordinates
         n1 = self.n1
         n2 = self.n2
         a = self.a
@@ -363,8 +364,8 @@ class FEM_2d(object):
             i = int((x[0] - a) / (b - a) * (n1 - 1))
             j = int((x[1] - c) / (d - c) * (n2 - 1))
             # Coordinates of corners of box formed by two triangles which contains x
-            corner0 = triangles[2 * (n1 - 1) * j + 2 * i]
-            corner1 = triangles[2 * (n1 - 1) * j + 2 * i + 1]
+            corner0 = v[triangles[2 * (n1 - 1) * j + 2 * i][0]]
+            corner1 = v[triangles[2 * (n1 - 1) * j + 2 * i + 1][2]]
             if (x[1] - corner0[1]) * (corner1[0] - corner0[0]) > (
                     x[0] - corner0[0]) * (corner1[1] - corner0[1]):
                 triangle_indices[m] = 2 * (n1 - 1) * j + 2 * i + 1
