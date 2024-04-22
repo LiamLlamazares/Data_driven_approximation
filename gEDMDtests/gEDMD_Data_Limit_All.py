@@ -20,9 +20,9 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
 # Constants
-M = 10**3
-number_of_runs = 6
-number_of_batches = 2
+M = 10**6
+number_of_runs = 50
+number_of_batches = 10
 confidence_level = 0.95
 degree_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians', 'FEM']
@@ -54,21 +54,22 @@ variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
 psi_g = observables.gaussians(Omega, sigma=variance)
 psi_FEM = observables.FEM_2d(Omega)
 observables_list = [psi_m, psi_g, psi_FEM]
-gedmd_helper.plot_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma_noise=0,
-    # title='Simple deterministic system gEDMD',
-    operator='K',
-    path='ODE_FEM')
-1 + 1
+
+# gedmd_helper.plot_errors_data_limit(
+#     M,
+#     min_number_of_data_points,
+#     confidence_level,
+#     number_of_runs,
+#     number_of_batches,
+#     observables_list,
+#     observables_names,
+#     Omega,
+#     b,
+#     sigma_noise=0,
+#     # title='Simple deterministic system gEDMD',
+#     operator='K',
+#     path='ODE_FEM_small')
+# 1 + 1
 
 
 # ########################################
@@ -87,25 +88,24 @@ def sigma(x):
     return y
 
 
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    path='Double_well_FEM')
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     path='Double_well_FEM')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
 gedmd_helper.plot_errors_data_limit(M,
                                     min_number_of_data_points,
                                     confidence_level,
                                     number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
+                                    number_of_batches, [psi_m, psi_g, psi_FEM],
                                     observables_names,
                                     Omega,
                                     b,

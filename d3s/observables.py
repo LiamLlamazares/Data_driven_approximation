@@ -424,14 +424,15 @@ class FEM_2d(object):
         n = self.n
         d = self.d
         triangle_mapping = self.__get_Triangles(X)
-        Y = b(X)
         G = _np.zeros([n, n])
         C = _np.zeros([n, n])
         bn = self.boundary_nodes
+        sigma = sigma(X) if callable(sigma) else sigma
 
         if f is None:  #gEDMD, we do note calculate T
             T = None
             uniform_norm_psi_A_psi = None
+            Y = b(X)
             # Precompute noise if needed
             if sigma_noise is not None:
                 noise_phi = sigma_noise * _np.random.randn(M, 3)
@@ -468,14 +469,16 @@ class FEM_2d(object):
                         C[_np.ix_(gi, gi)] += Y[k, m] * _np.outer(
                             nabla_phi[k], phi)  # b\cdot nabla phi_i \phi_j
                         if sigma is not None:
-                            C[_np.ix_(gi,
-                                      gi)] += -0.5 * sigma[k, l] * _np.outer(
-                                          nabla_phi[k], nabla_phi[l])
+                            C[_np.ix_(
+                                gi, gi)] += -0.5 * sigma[k, l, m] * _np.outer(
+                                    nabla_phi[k], nabla_phi[l])
 
                 if sigma_noise is not None:
                     C[_np.ix_(gi, gi)] += noise_C[m]
 
         else:  #EDMD
+            T = _np.zeros([n, n])
+            Y = f(X)
             # Precompute noise if needed
             if sigma_noise is not None:
                 noise_phi = sigma_noise * _np.random.randn(M, 3)
@@ -492,8 +495,8 @@ class FEM_2d(object):
 
                 x_local = self.inverse_mappings[triangle_index](X[:, m])
                 phi = self.__phi(x_local)
-                phiY = self.__phi(self.inverse_mappings[triangle_index](f(
-                    X[:, m])))
+                phiY = self.__phi(self.inverse_mappings[triangle_index](Y[:,
+                                                                          m]))
 
                 if sigma_noise is not None:
                     phi += noise_phi[m]
@@ -508,10 +511,10 @@ class FEM_2d(object):
                 G[_np.ix_(gi, gi)] += _np.outer(phi, phi)
                 C[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
                 T[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
-                #Remove boundary from T
-                T = _np.delete(_np.delete(T, bn, axis=0), bn, axis=1)
-                uniform_norm_psi_A_psi = uniform_norm_psi_A_psi = max(
-                    PsiX_max.max(), PsiY_max.max())
+            #Remove boundary from T
+            T = _np.delete(_np.delete(T, bn, axis=0), bn, axis=1)
+            uniform_norm_psi_A_psi = uniform_norm_psi_A_psi = max(
+                PsiX_max.max(), PsiY_max.max())
 
         #Remove boundary nodes from rows and columns of C,G
         G = _np.delete(_np.delete(G, bn, axis=0), bn, axis=1)
@@ -537,6 +540,7 @@ class FEM_2d(object):
             Y = b(X)
             C = _np.zeros([n, n])
             bn = self.boundary_nodes
+            sigma = sigma(X) if callable(sigma) else sigma
 
             if sigma_noise is None:
                 for m in range(M):
@@ -600,20 +604,6 @@ class FEM_2d(object):
         #Remove boundary nodes from rows and columns
         C = _np.delete(_np.delete(C, bn, axis=0), bn, axis=1)
         return C
-
-    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
-        '''
-        Calculate the mass matrix G given the data points X using optimized methods.
-         Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
-        '''
-        #Calculate mass matrix G
-        G = self.calc_G(X, f, sigma_noise)
-        #Calculate structure matrix C
-        C = self.calc_C(X, b, sigma, f, sigma_noise)
-        if operator == 'P':
-            C = C.T  #Perron Frobenius operator is transpose of Koopman operator
-
-        return G, C, T, uniform_norm_psi_A_psi
 
     def __repr__(self):
         return 'Finite element basis functions on uniform mesh.'

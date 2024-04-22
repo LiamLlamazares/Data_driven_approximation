@@ -32,7 +32,10 @@ gedmd_helper.plot_data_limit(paths_data,
 paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD']
 
 ##FOR FEM
-paths_data = ['ODE_FEM', 'OU_FEM', 'OU_PF_FEM', 'OU_EDMD_FEM']
+paths_data = [
+    'ODE_FEM', 'Double_well_FEM', 'Double_well_EDMD_FEM', 'OU_FEM',
+    'OU_PF_FEM', 'OU_EDMD_FEM'
+]
 powers = [-0.5, -1]
 observables_names_data = ['Monomials', 'Gaussians', 'FEM']
 font_size = 30
