@@ -417,47 +417,37 @@ class FEM_2d(object):
 
     def calc_G(self, X, f=None, sigma_noise=None):
         '''
-        Calculate the mass matrix G given the data points X.
-        Sums up phi_i(x_m)phi_j(x_m) for all data points x_m and adds to relevant entries of G.
+        Calculate the mass matrix G given the data points X using optimized methods.
         '''
         if f is None:
-            f = identity
+            f = lambda x: x  # Identity function if no function is provided.
+
         M = X.shape[1]
         n = self.n
-        G = _np.zeros([n, n])
-        triangle_mapping = self.__get_Triangles(
-            X)  #gets triangle to which each point belongs
+        G = _np.zeros((n, n))
+        triangle_mapping = self.__get_Triangles(X)
 
-        if sigma_noise is None:
-            for m in range(M):
-                triangle_index = triangle_mapping[m]
-                if triangle_index == -1:
-                    continue
-                inverse_mapping = self.inverse_mappings[triangle_index]
-                phi = self.__phi(inverse_mapping(X[:, m]))
-                phiY = self.__phi(inverse_mapping(f(
-                    X[:, m])))  #Used for EDMD only to calculate C matrix
-                gi = self.t[
-                    triangle_index, :]  #Global indices for triangle. What index in G corresponds to current triangle
-                for i in range(3):
-                    for j in range(3):
-                        G[gi[i], gi[j]] += phi[i] * phiY[j]
-        else:
-            for m in range(M):
-                triangle_index = triangle_mapping[m]
-                if triangle_index == -1:
-                    continue
-                inverse_mapping = self.inverse_mappings[triangle_index]
-                phi = self.__phi(inverse_mapping(X[:, m]))
-                phiY = self.__phi(inverse_mapping(f(
-                    X[:, m])))  #Used for EDMD only to calculate C matrix
-                gi = self.t[triangle_index, :]
-                for i in range(3):
-                    for j in range(3):
-                        G[gi[i],
-                          gi[j]] += (phi[i] + sigma_noise * _np.random.randn()
-                                     ) * (phiY[j] +
-                                          sigma_noise * _np.random.randn())
+        for m in range(M):
+            triangle_index = triangle_mapping[m]
+            if triangle_index == -1:
+                continue
+
+            x_local = self.inverse_mappings[triangle_index](X[:, m])
+            phi = self.__phi(x_local)
+            phiY = self.__phi(self.inverse_mappings[triangle_index](f(X[:,
+                                                                        m])))
+
+            if sigma_noise is not None:
+                noise_phi = sigma_noise * _np.random.randn(M, 3)
+                noise_phiY = sigma_noise * _np.random.randn(M, 3)
+                phi += noise_phi[m]
+                phiY += noise_phiY[m]
+
+            gi = self.t[triangle_index]  # Global indices for the triangle
+
+            # Update G matrix in a vectorized manner
+            G[_np.ix_(gi, gi)] += _np.outer(phi, phiY)
+
         return G
 
     def calc_C(self, X, b, sigma, f=None, sigma_noise=None):
