@@ -698,7 +698,14 @@ class FEM_1d(object):
 
         return y
 
-    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
+    def calc_GCT(self,
+                 X,
+                 b,
+                 sigma,
+                 dsigma2=None,
+                 f=None,
+                 sigma_noise=None,
+                 operator='K'):
         '''
         Calculate the mass matrix G given the data points X using optimized methods.
          Calculate the structure matrix <b_k partial_k phi_i,phi_j>,  <Sigma_kl d_xk phi i, d_xl phi j> given the data points X.
