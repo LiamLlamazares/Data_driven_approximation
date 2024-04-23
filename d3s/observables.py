@@ -434,8 +434,11 @@ class FEM_2d(object):
         G = _np.zeros([n, n])
         C = _np.zeros([n, n])
         bn = self.boundary_nodes
-        sigma = sigma(X) if callable(sigma) else sigma
-        dsigma2 = dsigma2(X) if callable(dsigma2) else dsigma2
+        if sigma is not None:
+            sigma = sigma(X) if callable(sigma) else _np.repeat(
+                sigma[:, :, _np.newaxis], M, axis=2)
+            dsigma2 = dsigma2(X) if callable(dsigma2) else _np.repeat(
+                dsigma2[:, :, :, _np.newaxis], M, axis=3)
 
         if f is None:  #gEDMD, we do note calculate T
             T = None
@@ -481,11 +484,11 @@ class FEM_2d(object):
                                 gi, gi)] += -0.5 * sigma[k, l, m] * _np.outer(
                                     nabla_phi[k], nabla_phi[l]
                                 )  # sigma nabla phi_i nabla phi_j
-
-                            #divergence of sigma nabla phi_i phi_j
-                            C[_np.ix_(gi, gi)] += -0.5 * (
-                                sigma[k, l, m] * nabla_phi[l] +
-                                dsigma2[k, l, k, m] * phi) * nabla_phi[l]
+                            if dsigma2 is not None:
+                                #divergence of sigma nabla phi_i phi_j
+                                C[_np.ix_(gi, gi)] += -0.5 * (
+                                    sigma[k, l, m] * nabla_phi[l] +
+                                    dsigma2[k, l, k, m] * phi) * nabla_phi[l]
                 if sigma_noise is not None:
                     C[_np.ix_(gi, gi)] += noise_C[m]
 
@@ -553,7 +556,8 @@ class FEM_2d(object):
             Y = b(X)
             C = _np.zeros([n, n])
             bn = self.boundary_nodes
-            sigma = sigma(X) if callable(sigma) else sigma
+            sigma = sigma(X) if callable(sigma) else _np.repeat(
+                sigma[:, :, _np.newaxis], M, axis=2)
 
             if sigma_noise is None:
                 for m in range(M):

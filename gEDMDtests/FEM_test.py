@@ -75,12 +75,16 @@ k = 2
 
 Sigma = 2 * np.eye(2)
 start = time.time()
-G = psi_FEM.calc_G(X, f=None)
+G, C, _, _ = psi_FEM.calc_GCT(X,
+                              b,
+                              sigma=Sigma,
+                              dsigma2=None,
+                              f=None,
+                              sigma_noise=None,
+                              operator='K')
 end = time.time()
-print('Time to calculate G: ', end - start)
-start = time.time()
-C = psi_FEM.calc_C(X, b, Sigma, f=None)
-end = time.time()
+print('Time to calculate GCT: ', end - start)
+
 print('Time to calculate C: ', end - start)
 A1, G1, C1, _, _ = gedmd_helper.gedmdMatrices(X,
                                               psi_FEM,
