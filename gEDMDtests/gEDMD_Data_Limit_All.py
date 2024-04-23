@@ -55,18 +55,18 @@ psi_g = observables.gaussians(Omega, sigma=variance)
 psi_FEM = observables.FEM_2d(Omega)
 observables_list = [psi_m, psi_g, psi_FEM]
 
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma_noise=0,
-                                    operator='K',
-                                    path='ODE_FEM_small')
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma_noise=0,
+#                                     operator='K',
+#                                     path='ODE_FEM')
 
 
 # ########################################
@@ -100,18 +100,18 @@ def dsigma2(x):
     return y
 
 
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    dsigma2=dsigma2,
-                                    path='Double_well_FEM')
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     dsigma2=dsigma2,
+#                                     path='Double_well_FEM')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
 gedmd_helper.plot_errors_data_limit(M,
@@ -125,76 +125,74 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     f=f,
                                     sigma=sigma,
+                                    dsigma2=dsigma2,
                                     path='Double_well_EDMD_FEM')
 
-########################################
-# OU system
-########################################
+# ########################################
+# # OU system
+# ########################################
 
-# define domain
-bounds = np.array([[-2, 2]])
-boxes = np.array([degree_of_monomials + 1])
-Omega = domain.discretization(bounds, boxes)
+# # define domain
+# bounds = np.array([[-2, 2]])
+# boxes = np.array([degree_of_monomials + 1])
+# Omega = domain.discretization(bounds, boxes)
 
-# define system
-alpha = 1
-beta = 4
+# # define system
+# alpha = 1
+# beta = 4
 
+# def b(x):
+#     return -alpha * x
 
-def b(x):
-    return -alpha * x
+# def sigma(x):
+#     return np.sqrt(2 / beta) * np.ones((1, 1, x.shape[1]))
 
+# # define observables
+# psi_m = observables.monomials(degree_of_monomials)
+# variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
+# psi_g = observables.gaussians(Omega, sigma=variance)
+# psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
+# observables_list = [psi_m, psi_g, psi_FEM]
+# observables_names = ['Monomials', 'Gaussians', 'FEM']
+# #gEDMD Koopman operator
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     operator='K',
+#                                     path='OU_FEM')
+# # gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     operator='P',
+#                                     path='OU_PF_FEM')
 
-def sigma(x):
-    return np.sqrt(2 / beta) * np.ones((1, 1, x.shape[1]))
-
-
-# define observables
-psi_m = observables.monomials(degree_of_monomials)
-variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
-psi_g = observables.gaussians(Omega, sigma=variance)
-psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
-observables_list = [psi_m, psi_g, psi_FEM]
-observables_names = ['Monomials', 'Gaussians', 'FEM']
-#gEDMD Koopman operator
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    operator='K',
-                                    path='OU_FEM')
-# gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    operator='P',
-                                    path='OU_PF_FEM')
-
-h = 0.001  #EDMD
-tau = 0.5
-f = systems.OrnsteinUhlenbeck(h, int(tau / h))
-gedmd_helper.plot_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    f=f,
-                                    path='OU_EDMD_FEM')
+# h = 0.001  #EDMD
+# tau = 0.5
+# f = systems.OrnsteinUhlenbeck(h, int(tau / h))
+# gedmd_helper.plot_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     f=f,
+#                                     path='OU_EDMD_FEM')
