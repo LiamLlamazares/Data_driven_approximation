@@ -145,11 +145,7 @@ def sigma(x):
 #                                           M_approx=M_approx,
 #                                           prob=0.5,
 #                                           path='OU')
-
-h = 0.001
-tau = 0.5
-f = systems.OrnsteinUhlenbeck(h, int(tau / h))  #EDMD
-observables_names = ['Gaussians', 'FEM']  #We can do FEM for EDMD
+observables_names = ['Gaussians']
 gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           max_number_of_observables,
                                           confidence_level,
@@ -159,8 +155,27 @@ gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
                                           Omega,
                                           b,
                                           sigma=None,
-                                          f=f,
                                           M_exact=M_exact,
                                           M_approx=M_approx,
                                           prob=0.5,
-                                          path='OU_EDMD_FEM')
+                                          operator='P',
+                                          path='OU_PF')
+
+# h = 0.001
+# tau = 0.5
+# f = systems.OrnsteinUhlenbeck(h, int(tau / h))  #EDMD
+# observables_names = ['Gaussians', 'FEM']  #We can do FEM for EDMD
+# gedmd_helper.plot_errors_dictionary_limit(min_number_of_observables,
+#                                           max_number_of_observables,
+#                                           confidence_level,
+#                                           number_of_runs,
+#                                           number_of_batches,
+#                                           observables_names,
+#                                           Omega,
+#                                           b,
+#                                           sigma=None,
+#                                           f=f,
+#                                           M_exact=M_exact,
+#                                           M_approx=M_approx,
+#                                           prob=0.5,
+#                                           path='OU_EDMD_FEM')

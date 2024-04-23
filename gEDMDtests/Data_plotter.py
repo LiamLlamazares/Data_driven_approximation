@@ -15,7 +15,7 @@ import d3s.observables as observables
 import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
-## Dictionary limit
+## DATA limit
 paths_data = [
     'ODE_FEM', 'Double_well_FEM', 'Double_well_EDMD_FEM', 'OU_FEM',
     'OU_PF_FEM', 'OU_EDMD_FEM'
@@ -31,8 +31,8 @@ gedmd_helper.plot_data_limit(paths_data,
                              ylabel='$\epsilon$',
                              font_size=font_size,
                              font_size_ticks=font_size_ticks)
-paths_dict = ['ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_EDMD_FEM']
 
+##With NOISE
 paths_noise = [
     'ODE_sigma_noise_FEM =0.001',
     'ODE_sigma_noise_FEM =0.01',
@@ -52,8 +52,11 @@ gedmd_helper.plot_data_limit(paths_noise,
                              font_size=font_size,
                              font_size_ticks=font_size_ticks)
 
-## Dictionary limit
+## DICTIONARY limit
 observables_names_dict = ['Gaussians', 'FEM']
+paths_dict = [
+    'ODE', 'Double_well', 'Double_well_EDMD', 'OU', 'OU_PF', 'OU_EDMD_FEM'
+]
 gedmd_helper.plot_dictionary_limit(paths_dict,
                                    observables_names_dict,
                                    xlabel='$N$',
@@ -61,12 +64,12 @@ gedmd_helper.plot_dictionary_limit(paths_dict,
                                    font_size=font_size,
                                    font_size_ticks=font_size_ticks)
 
-## Dictionary limit FEM
-paths_dict = ['OU_FEM', 'OU_EDMD_FEM']
-observables_names_dict = ['Gaussians', 'FEM']
-gedmd_helper.plot_dictionary_limit(paths_dict,
-                                   observables_names_dict,
-                                   xlabel='$N$',
-                                   ylabel='$\epsilon$',
-                                   font_size=font_size,
-                                   font_size_ticks=font_size_ticks)
+# ## Dictionary limit FEM
+# paths_dict = ['OU_FEM', 'OU_EDMD_FEM']
+# observables_names_dict = ['Gaussians', 'FEM']
+# gedmd_helper.plot_dictionary_limit(paths_dict,
+#                                    observables_names_dict,
+#                                    xlabel='$N$',
+#                                    ylabel='$\epsilon$',
+#                                    font_size=font_size,
+#                                    font_size_ticks=font_size_ticks)

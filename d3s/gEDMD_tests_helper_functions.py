@@ -580,7 +580,8 @@ def plot_data_limit(paths,
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
                 loc='lower left',
-                fontsize=font_size)
+                fontsize=font_size,
+                ncol=2)
             export_legend(
                 legend,
                 filename='gEDMDtests/Simulation_figures/Data_Limit/legend.pdf')
@@ -658,7 +659,8 @@ def plot_dictionary_limit(paths,
             legend = plt.legend(
                 legend_labels,  # we place the legend on bottom left of the plot
                 loc='lower left',
-                fontsize=font_size)
+                fontsize=font_size,
+                ncol=2)
             export_legend(
                 legend,
                 filename=
@@ -694,7 +696,11 @@ def export_legend(legend, filename="legend.png", pad_inches=0.2):
     ]
 
     # Create a new legend on the new figure using the handles and labels
-    new_legend = legend_ax.legend(handles, labels, loc='center', frameon=True)
+    new_legend = legend_ax.legend(handles,
+                                  labels,
+                                  loc='center',
+                                  frameon=True,
+                                  ncol=int(len(labels) / 2))
     new_legend.set_frame_on(True)  # Opaque background in the legend
 
     # Adjust the legend's appearance
