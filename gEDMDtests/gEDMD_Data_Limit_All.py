@@ -20,7 +20,7 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 import d3s.systems as systems
 
 # Constants
-M = 10**6
+M = 10**3
 number_of_runs = 50
 number_of_batches = 10
 confidence_level = 0.95
@@ -69,7 +69,7 @@ observables_list = [psi_m, psi_g, psi_FEM]
 #     # title='Simple deterministic system gEDMD',
 #     operator='K',
 #     path='ODE_FEM_small')
-# 1 + 1
+#
 
 
 # ########################################
@@ -88,17 +88,31 @@ def sigma(x):
     return y
 
 
-# gedmd_helper.plot_errors_data_limit(M,
-#                                     min_number_of_data_points,
-#                                     confidence_level,
-#                                     number_of_runs,
-#                                     number_of_batches,
-#                                     observables_list,
-#                                     observables_names,
-#                                     Omega,
-#                                     b,
-#                                     sigma=sigma,
-#                                     path='Double_well_FEM')
+#Gradient: first order derivative of sigmasigma^T. Element (i,j,k) is the derivative of sigma_i,j with respect to x_k
+def dsigma2(x):
+    n = x.shape[1]
+    y = np.zeros((2, 2, 2, n))
+    y[0, 0, 0, :] = 2 * x[0, :]
+    y[0, 0, 1, :] = 0
+    y[0, 1, 0, :] = 0.5
+    y[0, 1, 1, :] = 0
+    y[1, 0, 0, :] = 0.5
+    y[1, 0, 1, :] = 0
+    y[1, 1, 0, :] = 0
+    y[1, 1, 1, :] = 0
+    return y
+
+
+gedmd_helper.plot_errors_data_limit(M,
+                                    min_number_of_data_points,
+                                    confidence_level,
+                                    number_of_runs,
+                                    number_of_batches, [psi_FEM], ['FEM'],
+                                    Omega,
+                                    b,
+                                    sigma=sigma,
+                                    dsigma2=dsigma2,
+                                    path='Double_well_FEM')
 
 f = systems.DoubleWell2D(1e-2, 1000)  #EDMD
 gedmd_helper.plot_errors_data_limit(M,

@@ -19,6 +19,7 @@ def gedmdMatrices(X,
                   b,
                   Omega,
                   sigma=None,
+                  dsigma2=None,
                   f=None,
                   sigma_noise=0,
                   operator='K'):
@@ -67,6 +68,7 @@ def gedmdMatrices(X,
         G, C, T, uniform_norm_psi_A_psi = psi.calc_GCT(X,
                                                        b,
                                                        sigma,
+                                                       dsigma2=dsigma2,
                                                        f=f,
                                                        sigma_noise=sigma_noise,
                                                        operator=operator)
@@ -126,6 +128,7 @@ def plot_errors_data_limit(
     Omega,
     b,
     sigma=None,
+    dsigma2=None,
     f=None,
     sigma_noise=0,
     operator='K',
@@ -145,6 +148,7 @@ def plot_errors_data_limit(
     Omega (d3s.domain.discretization, optional): The domain, by default a square [-1,1]^2. Defaults to Omega.
     b (function): The drift function.
     sigma (function, optional): The diffusion function. Defaults to None.
+    dsigma2 (function, optional): The  derivative of sigma*sigma^T. Used only for FEM. Defaults to None.
     sigma_noise (float, optional): The standard deviation of the noise added to the observations psi_j A(psi_i). Defaults to 0.
     f (function, optional): The forward operator for EDMD. EDMD is used if supplied. Defaults to None.
     block (bool, optional): Whether to block the plot. Defaults to True.
@@ -222,8 +226,9 @@ gedmd_helper.plot_errors_data_limit(M,
                                          observables_list[type],
                                          b,
                                          Omega,
-                                         sigma,
-                                         f,
+                                         sigma=sigma,
+                                         dsigma2=dsigma2,
+                                         f=f,
                                          operator=operator)
         A_exact.append(A_ex)
         A_exact_matrix_norm.append(np.linalg.norm(A_ex, ord=2))
@@ -237,8 +242,9 @@ gedmd_helper.plot_errors_data_limit(M,
                                               observables_list[type],
                                               b,
                                               Omega,
-                                              sigma,
-                                              f,
+                                              sigma=sigma,
+                                              dsigma2=dsigma2,
+                                              f=f,
                                               sigma_noise=sigma_noise,
                                               operator=operator)
                 matrix_errors[i, type, m] = np.linalg.norm(

@@ -415,7 +415,14 @@ class FEM_2d(object):
         '''
         return _np.array([[-1, 1, 0], [-1, 0, 1]])
 
-    def calc_GCT(self, X, b, sigma, f=None, sigma_noise=None, operator='K'):
+    def calc_GCT(self,
+                 X,
+                 b,
+                 sigma,
+                 dsigma2,
+                 f=None,
+                 sigma_noise=None,
+                 operator='K'):
         '''
         Calculate the mass matrix G given the data points X using optimized methods.
         '''
@@ -428,6 +435,7 @@ class FEM_2d(object):
         C = _np.zeros([n, n])
         bn = self.boundary_nodes
         sigma = sigma(X) if callable(sigma) else sigma
+        dsigma2 = dsigma2(X) if callable(dsigma2) else dsigma2
 
         if f is None:  #gEDMD, we do note calculate T
             T = None
@@ -471,8 +479,13 @@ class FEM_2d(object):
                         if sigma is not None:
                             C[_np.ix_(
                                 gi, gi)] += -0.5 * sigma[k, l, m] * _np.outer(
-                                    nabla_phi[k], nabla_phi[l])
+                                    nabla_phi[k], nabla_phi[l]
+                                )  # sigma nabla phi_i nabla phi_j
 
+                            #divergence of sigma nabla phi_i phi_j
+                            C[_np.ix_(gi, gi)] += -0.5 * (
+                                sigma[k, l, m] * nabla_phi[l] +
+                                dsigma2[k, l, k, m] * phi) * nabla_phi[l]
                 if sigma_noise is not None:
                     C[_np.ix_(gi, gi)] += noise_C[m]
 
