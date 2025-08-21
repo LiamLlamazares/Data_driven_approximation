@@ -115,7 +115,7 @@ class discretization(object):
             x.append(
                 _np.linspace(b[i, 0] + h[i] / 2, b[i, 1] - h[i] / 2,
                              self._boxes[i]))
-        X = _sp.meshgrid(*x, indexing='ij')
+        X = _np.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
             c[i, :] = X[i].reshape(self.numBoxes())[0:n]
@@ -131,7 +131,7 @@ class discretization(object):
         x = []
         for i in range(d):
             x.append(_np.linspace(b[i, 0], b[i, 1], self._boxes[i] + 1))
-        X = _sp.meshgrid(*x, indexing='ij')
+        X = _np.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
             c[i, :] = X[i].reshape(n)
@@ -202,4 +202,4 @@ def randb(n, b):
     '''
     Returns an array of n uniformly distributed random values in the interval b.
     '''
-    return b[0] + (b[1] - b[0]) * _sp.rand(1, n)
+    return b[0] + (b[1] - b[0]) * _np.random.rand(1, n)

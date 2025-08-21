@@ -292,6 +292,161 @@ gedmd_helper.plot_errors_data_limit(M,
     np.savez('gEDMDtests/Simulation_data/Data_Limit/' + path + '.npz', **data)
 
 
+def plot_spectrum_errors_data_limit(
+    M,
+    min_number_of_data_points,
+    confidence_level,
+    number_of_runs,
+    number_of_batches,
+    observables_list,
+    observables_names,
+    Omega,
+    b,
+    sigma=None,
+    dsigma2=None,
+    f=None,
+    sigma_noise=0,
+    operator='K',
+    path=None,
+    eigen_values_exact=None,
+):
+    """
+    Variation of `plot_errors_data_limit` that computes spectral errors.
+
+    Changes from the original:
+    - Accepts `eigen_values_exact` (per-type list or None). If provided it should
+      be a list with length equal to number of observables types, each entry an
+      array-like of ordered eigenvalues for that observable; if a single
+      array-like is provided it will be used for all types. If `None` the
+      function computes eigenvalues of the `A_exact` matrices.
+    - Does not compute matrix norms.
+    - Computes `spectrum_errors` with the same shape as the original
+      `matrix_errors` array. For each run it computes the eigenvalues of the
+      estimated matrix `A` and compares to the exact eigenvalues by forming the
+      vector of differences and taking the L2 norm (Euclidean) as the scalar
+      error for that run (assumption: L2 aggregation of eigenvalue differences).
+    - Uses those spectral quantities for batching, averaging and confidence
+      intervals.
+    - Saves results to `gEDMDtests/Simulation_data/Data_Limit_Spectrum/`.
+
+    NOTE: If eigenvalue lists have different lengths the comparison uses the
+    minimum length and compares the first k entries after sorting by absolute
+    value (descending). This function assumes the user-provided `eigen_values_exact`
+    are ordered as desired; if not provided, the function sorts computed
+    eigenvalues by absolute value descending before comparison.
+    """
+
+    # generate data
+    number_of_loops_data_points = int(
+        np.floor(np.log2(M / min_number_of_data_points)))
+
+    data_points_number = [
+        min_number_of_data_points * 2**x
+        for x in range(0, number_of_loops_data_points)
+    ]
+    print(path, ' max data_points_number = ',
+          min_number_of_data_points * 2**number_of_loops_data_points,
+          'number_of_loops = ', number_of_loops_data_points)
+    types_of_observables_number = len(observables_list)
+    A_exact = []
+    # spectrum_errors: (num_data_points_loops, types, number_of_runs)
+    spectrum_errors = np.zeros((number_of_loops_data_points,
+                                types_of_observables_number, number_of_runs))
+    spectrum_errors_average = np.zeros((number_of_loops_data_points,
+                                        types_of_observables_number))
+    X_exact = Omega.rand(M)
+
+    # Normalize/prepare eigen_values_exact argument: allow single array for all types
+    if eigen_values_exact is not None and not isinstance(eigen_values_exact, (list, tuple)):
+        eigen_values_exact = [np.array(eigen_values_exact) for _ in range(types_of_observables_number)]
+
+    for t in range(types_of_observables_number):
+        # Exacts operators are the same over all runs to save time
+        A_ex, _, _, _, _ = gedmdMatrices(X_exact,
+                                         observables_list[t],
+                                         b,
+                                         Omega,
+                                         sigma=sigma,
+                                         dsigma2=dsigma2,
+                                         f=f,
+                                         operator=operator)
+        A_exact.append(A_ex)
+
+        # compute exact eigenvalues for this type if not supplied
+        if eigen_values_exact is None or eigen_values_exact[t] is None:
+            evs_ex = np.linalg.eigvals(A_ex)
+            # sort by magnitude descending to get consistent ordering
+            evs_ex = evs_ex[np.argsort(-np.abs(evs_ex))]
+        else:
+            evs_ex = np.array(eigen_values_exact[t])
+
+        for m in range(number_of_runs):
+            print('runs completed = ', m, '/', number_of_runs, "type = ",
+                  observables_names[t])
+            for i in range(number_of_loops_data_points):
+                X = Omega.rand(data_points_number[i])
+                A, _, _, _, _ = gedmdMatrices(X,
+                                              observables_list[t],
+                                              b,
+                                              Omega,
+                                              sigma=sigma,
+                                              dsigma2=dsigma2,
+                                              f=f,
+                                              sigma_noise=sigma_noise,
+                                              operator=operator)
+
+                # compute eigenvalues of A and sort by magnitude descending
+                evs_A = np.linalg.eigvals(A)
+                evs_A = evs_A[np.argsort(-np.abs(evs_A))]
+
+                # compare only up to the minimum available length
+                k = min(len(evs_ex), len(evs_A))
+                if k == 0:
+                    # if no eigenvalues, set error to nan
+                    spectrum_errors[i, t, m] = np.nan
+                else:
+                    # take first k entries and compute L2 norm of differences
+                    diff = evs_ex[:k] - evs_A[:k]
+                    spectrum_errors[i, t, m] = np.linalg.norm(diff)
+
+        # compute per-type average over runs (kept for parity with original)
+        spectrum_errors_average = np.mean(spectrum_errors, axis=2)
+
+    # calculate confidence intervals for the average spectral error for each number of data points
+    batch_size = int(np.floor(number_of_runs / number_of_batches))
+    if batch_size == 0:
+        raise Exception(
+            'batch size is 0. Please increase number of runs or decrease number of batches'
+        )
+    spectrum_errors_batches = np.zeros(
+        (number_of_loops_data_points, types_of_observables_number, number_of_batches))
+    for nb in range(number_of_batches):
+        spectrum_errors_batches[:, :, nb] = np.mean(
+            spectrum_errors[:, :, nb * batch_size:(nb + 1) * batch_size], axis=2
+        )
+
+    # now compute average and std across batches
+    spectrum_errors_average = np.mean(spectrum_errors_batches, axis=2)
+    spectrum_errors_std = np.std(spectrum_errors_batches, axis=2, ddof=1)
+    t_value = stats.t.ppf((1 + confidence_level) / 2, number_of_batches - 1)
+    spectrum_errors_confidence_interval = t_value * spectrum_errors_std / np.sqrt(number_of_batches)
+
+    lower_bound = spectrum_errors_average - spectrum_errors_confidence_interval
+    upper_bound = spectrum_errors_average + spectrum_errors_confidence_interval
+
+    # Prepare data to save
+    data = {
+        'data_points_number': data_points_number,
+        'spectrum_errors_average': spectrum_errors_average,
+        'spectrum_errors_confidence_interval': spectrum_errors_confidence_interval,
+        'observables_names': observables_names,
+        'title': path,
+        'eigen_values_exact': eigen_values_exact,
+    }
+
+    np.savez('gEDMDtests/Simulation_data/Data_Limit_Spectrum/' + path + '.npz', **data)
+
+
 def plot_errors_dictionary_limit(min_number_of_observables,
                                  max_number_of_observables,
                                  confidence_level,
@@ -691,7 +846,7 @@ def export_legend(legend, filename="legend.png", pad_inches=0.2):
     legend_ax.set_frame_on(False)
 
     # Get the legend's handles and labels from the existing legend
-    handles, labels = legend.legendHandles, [
+    handles, labels = legend.legend_handles, [
         text.get_text() for text in legend.get_texts()
     ]
 
@@ -747,3 +902,20 @@ def SDE_solver_2D(X0, b, sigma, n_t, dt):
         dW = np.random.randn(d, n_x) * np.sqrt(dt)
         X += b(X) * dt + sigma @ dW
     return X
+
+def OU_solution_f(theta,sigma,T):
+    """
+    Solves the SDE dX = -theta x dt + sigma dW, where W is a Wiener process.
+
+    Parameters:
+    theta (float): drift coefficient.
+    sigma (function): The diffusion coefficient
+    T (float): The final time
+
+    Returns:
+     A function f which can be applied to a vector of initial conditions X0 to give f(X0)= X_T
+    """
+
+    variance = sigma**2/2/theta *(1- np.exp(-2*theta*T))
+    f = lambda X0: X0 * np.exp(-theta * T) + np.sqrt(variance) * np.random.randn(*X0.shape)
+    return f
