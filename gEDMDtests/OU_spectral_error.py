@@ -21,8 +21,8 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 
 # Constants
 M = 10**6
-number_of_runs = 4
-number_of_batches = 2
+number_of_runs = 50
+number_of_batches = 10
 confidence_level = 0.95
 degree_of_monomials = 8
 observables_names = ['Monomials', 'Gaussians', 'FEM']
@@ -60,8 +60,10 @@ psi_g = observables.gaussians(Omega, sigma=variance)
 psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
 observables_list = [psi_m, psi_g, psi_FEM]
 observables_names = ['Monomials', 'Gaussians', 'FEM']
-#gEDMD Koopman operator
-
+#gEDMD Koopman operator. Monomials are stable so error is 0
+# We only know the exact eigenvalues for the monomials
+eigenvalues_exact_mono = alpha *  np.arange(-degree_of_monomials, 1)
+eigen_values_exact = [eigenvalues_exact_mono, None, None]
 gedmd_helper.plot_spectrum_errors_data_limit(
     M,
     min_number_of_data_points,
@@ -75,10 +77,10 @@ gedmd_helper.plot_spectrum_errors_data_limit(
     sigma=sigma,
     operator='K',
     path=paths[0],
-    eigen_values_exact=None,
+    eigen_values_exact=eigen_values_exact,
 )
 
-# gEDMD Perron-Frobenius operator. Monomials are stable so error is 0
+# gEDMD Perron-Frobenius generator. Eigenvalues are the same
 gedmd_helper.plot_spectrum_errors_data_limit(M,
                                     min_number_of_data_points,
                                     confidence_level,
@@ -94,10 +96,14 @@ gedmd_helper.plot_spectrum_errors_data_limit(M,
                                     eigen_values_exact=None)
 
 #EDMD
-T = 0.5
-theta =1 
-sigma = np.sqrt(1/2)
-f = gedmd_helper.OU_solution_f(theta,sigma,T)
+T = 1
+alpha =1 
+beta = 4
+# We only know the exact eigenvalues for the monomials
+eigenvalues_exact_mono = np.exp(alpha * T * np.arange(-degree_of_monomials, 1))
+eigen_values_exact = [eigenvalues_exact_mono, None, None]
+
+f = gedmd_helper.OU_solution_f(alpha,beta,T)
 gedmd_helper.plot_spectrum_errors_data_limit(M,
                                     min_number_of_data_points,
                                     confidence_level,
@@ -110,7 +116,7 @@ gedmd_helper.plot_spectrum_errors_data_limit(M,
                                     sigma=sigma,
                                     f=f,
                                     path=paths[2],
-                                    eigen_values_exact=None)
+                                    eigen_values_exact=eigen_values_exact)
 
 
 powers = [-0.5, -1]

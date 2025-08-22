@@ -442,8 +442,7 @@ def plot_spectrum_errors_data_limit(
         'spectrum_errors_average': spectrum_errors_average,
         'spectrum_errors_confidence_interval': spectrum_errors_confidence_interval,
         'observables_names': observables_names,
-        'title': path,
-        'eigen_values_exact': eigen_values_exact,
+        'title': path
     }
 
     np.savez('gEDMDtests/Simulation_data/Data_Limit_Spectrum/' + path + '.npz', **data)
@@ -905,19 +904,19 @@ def SDE_solver_2D(X0, b, sigma, n_t, dt):
         X += b(X) * dt + sigma @ dW
     return X
 
-def OU_solution_f(theta,sigma,T):
+def OU_solution_f(alpha,beta,T):
     """
-    Solves the SDE dX = -theta x dt + sigma dW, where W is a Wiener process.
+    Solves the SDE dX = -alpha x dt + sigma dW, where W is a Wiener process.
 
     Parameters:
-    theta (float): drift coefficient.
-    sigma (function): The diffusion coefficient
+    alpha (float): drift coefficient.
+    beta (float): The diffusion parameter
     T (float): The final time
 
     Returns:
      A function f which can be applied to a vector of initial conditions X0 to give f(X0)= X_T
     """
-
-    variance = sigma**2/2/theta *(1- np.exp(-2*theta*T))
-    f = lambda X0: X0 * np.exp(-theta * T) + np.sqrt(variance) * np.random.randn(*X0.shape)
+    sigma = np.sqrt(2 / beta) # Diffusion of the SDE
+    variance = sigma**2/2/alpha *(1- np.exp(-2*alpha*T))
+    f = lambda X0: X0 * np.exp(-alpha * T) + np.sqrt(variance) * np.random.randn(*X0.shape)
     return f
