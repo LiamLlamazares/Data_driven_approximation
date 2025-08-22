@@ -20,8 +20,8 @@ import d3s.gEDMD_tests_helper_functions as gedmd_helper
 # import d3s.systems as systems
 
 # Constants
-M = 10**4
-number_of_runs = 10
+M = 10**6
+number_of_runs = 4
 number_of_batches = 2
 confidence_level = 0.95
 degree_of_monomials = 8

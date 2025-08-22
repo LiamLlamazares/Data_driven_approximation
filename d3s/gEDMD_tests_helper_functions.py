@@ -375,10 +375,12 @@ def plot_spectrum_errors_data_limit(
         # compute exact eigenvalues for this type if not supplied
         if eigen_values_exact is None or eigen_values_exact[t] is None:
             evs_ex = np.linalg.eigvals(A_ex)
-            # sort by magnitude descending to get consistent ordering
-            evs_ex = evs_ex[np.argsort(-np.abs(evs_ex))]
+            # sort by real part ascending to get consistent ordering
+            evs_ex = evs_ex[np.argsort(evs_ex.real)]
         else:
             evs_ex = np.array(eigen_values_exact[t])
+            # sort user-supplied exact eigenvalues by real part ascending
+            evs_ex = evs_ex[np.argsort(evs_ex.real)]
 
         for m in range(number_of_runs):
             print('runs completed = ', m, '/', number_of_runs, "type = ",
@@ -395,9 +397,9 @@ def plot_spectrum_errors_data_limit(
                                               sigma_noise=sigma_noise,
                                               operator=operator)
 
-                # compute eigenvalues of A and sort by magnitude descending
+                # compute eigenvalues of A and sort by real part ascending
                 evs_A = np.linalg.eigvals(A)
-                evs_A = evs_A[np.argsort(-np.abs(evs_A))]
+                evs_A = evs_A[np.argsort(evs_A.real)]
 
                 # compare only up to the minimum available length
                 k = min(len(evs_ex), len(evs_A))
