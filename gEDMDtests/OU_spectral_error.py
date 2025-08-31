@@ -53,70 +53,70 @@ def b(x):
 def sigma(x):
     return np.sqrt(2 / beta) * np.ones((1, 1, x.shape[1]))
 
-# define observables
-psi_m = observables.monomials(degree_of_monomials)
-variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
-psi_g = observables.gaussians(Omega, sigma=variance)
-psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
-observables_list = [psi_m, psi_g, psi_FEM]
-observables_names = ['Monomials', 'Gaussians', 'FEM']
-#gEDMD Koopman operator. Monomials are stable so error is 0
-# We only know the exact eigenvalues for the monomials
-eigenvalues_exact_mono = alpha *  np.arange(-degree_of_monomials, 1)
-eigen_values_exact = [eigenvalues_exact_mono, None, None]
-gedmd_helper.plot_spectrum_errors_data_limit(
-    M,
-    min_number_of_data_points,
-    confidence_level,
-    number_of_runs,
-    number_of_batches,
-    observables_list,
-    observables_names,
-    Omega,
-    b,
-    sigma=sigma,
-    operator='K',
-    path=paths[0],
-    eigen_values_exact=eigen_values_exact,
-)
+# # define observables
+# psi_m = observables.monomials(degree_of_monomials)
+# variance = (bounds[0, 1] - bounds[0, 0]) / boxes[0] / 2
+# psi_g = observables.gaussians(Omega, sigma=variance)
+# psi_FEM = observables.FEM_1d(bounds[0, 0], bounds[0, 1], boxes[0])
+# observables_list = [psi_m, psi_g, psi_FEM]
+# observables_names = ['Monomials', 'Gaussians', 'FEM']
+# #gEDMD Koopman operator. Monomials are stable so error is 0
+# # We only know the exact eigenvalues for the monomials
+# eigenvalues_exact_mono = alpha *  np.arange(-degree_of_monomials, 1)
+# eigen_values_exact = [eigenvalues_exact_mono, None, None]
+# gedmd_helper.plot_spectrum_errors_data_limit(
+#     M,
+#     min_number_of_data_points,
+#     confidence_level,
+#     number_of_runs,
+#     number_of_batches,
+#     observables_list,
+#     observables_names,
+#     Omega,
+#     b,
+#     sigma=sigma,
+#     operator='K',
+#     path=paths[0],
+#     eigen_values_exact=eigen_values_exact,
+# )
 
-# gEDMD Perron-Frobenius generator. Eigenvalues are the same
-gedmd_helper.plot_spectrum_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    operator='P',
-                                    path=paths[1],
-                                    eigen_values_exact=None)
+# # gEDMD Perron-Frobenius generator. Eigenvalues are the same
+# gedmd_helper.plot_spectrum_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     operator='P',
+#                                     path=paths[1],
+#                                     eigen_values_exact=None)
 
-#EDMD
-T = 1
-alpha =1 
-beta = 4
-# We only know the exact eigenvalues for the monomials
-eigenvalues_exact_mono = np.exp(alpha * T * np.arange(-degree_of_monomials, 1))
-eigen_values_exact = [eigenvalues_exact_mono, None, None]
+# #EDMD
+# T = 1
+# alpha =1 
+# beta = 4
+# # We only know the exact eigenvalues for the monomials
+# eigenvalues_exact_mono = np.exp(alpha * T * np.arange(-degree_of_monomials, 1))
+# eigen_values_exact = [eigenvalues_exact_mono, None, None]
 
-f = gedmd_helper.OU_solution_f(alpha,beta,T)
-gedmd_helper.plot_spectrum_errors_data_limit(M,
-                                    min_number_of_data_points,
-                                    confidence_level,
-                                    number_of_runs,
-                                    number_of_batches,
-                                    observables_list,
-                                    observables_names,
-                                    Omega,
-                                    b,
-                                    sigma=sigma,
-                                    f=f,
-                                    path=paths[2],
-                                    eigen_values_exact=eigen_values_exact)
+# f = gedmd_helper.OU_solution_f(alpha,beta,T)
+# gedmd_helper.plot_spectrum_errors_data_limit(M,
+#                                     min_number_of_data_points,
+#                                     confidence_level,
+#                                     number_of_runs,
+#                                     number_of_batches,
+#                                     observables_list,
+#                                     observables_names,
+#                                     Omega,
+#                                     b,
+#                                     sigma=sigma,
+#                                     f=f,
+#                                     path=paths[2],
+#                                     eigen_values_exact=eigen_values_exact)
 
 
 powers = [-0.5, -1]
@@ -124,7 +124,7 @@ observables_names = ['Monomials', 'Gaussians', 'FEM']
 font_size = 30
 font_size_ticks = 30
 xlabel='$M$'
-ylabel='$\epsilon$'
+ylabel=r'$\epsilon_{\mathrm{spec}}$'
 colours_observed=[
     'blue', 'orange', 'green', 'red', 'purple', 'brown',
     'pink', 'gray', 'olive', 'cyan'

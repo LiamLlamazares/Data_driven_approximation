@@ -920,3 +920,24 @@ def OU_solution_f(alpha,beta,T):
     variance = sigma**2/2/alpha *(1- np.exp(-2*alpha*T))
     f = lambda X0: X0 * np.exp(-alpha * T) + np.sqrt(variance) * np.random.randn(*X0.shape)
     return f
+
+
+def GalerkinMonomialsOUGenerator(alpha, beta, n):
+    """
+    Generates the exact Galerkin projection matrix onto the space of polynomials for the generator of the OU process
+
+    Parameters:
+    alpha (float): drift coefficient.
+    beta (float): The diffusion parameter
+    n (int): The degree of the polynomials.
+
+    Returns:
+    np.ndarray: The Galerkin projection matrix.
+    """
+    # Construct empty generator matrix of size nxn
+    L = np.zeros((n, n))
+    for i in range(n):
+        L[i, i] = - alpha * i
+        if i <= n-3:
+            L[i , i+2] =  (i+2) * (i + 1) / beta
+    return L
