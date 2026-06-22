@@ -67,7 +67,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     Omega,
                                     b,
                                     sigma_noise=sigma_noise,
-                                    path='ODE_sigma_noise_FEM =' +
+                                    path='ODE_sigma_noise_FEM=' +
                                     str(sigma_noise))
 sigma_noise = 0.01
 gedmd_helper.plot_errors_data_limit(M,
@@ -80,7 +80,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     Omega,
                                     b,
                                     sigma_noise=sigma_noise,
-                                    path='ODE_sigma_noise_FEM =' +
+                                    path='ODE_sigma_noise_FEM=' +
                                     str(sigma_noise))
 sigma_noise = 0.1
 gedmd_helper.plot_errors_data_limit(M,
@@ -93,7 +93,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     Omega,
                                     b,
                                     sigma_noise=sigma_noise,
-                                    path='ODE_sigma_noise_FEM =' +
+                                    path='ODE_sigma_noise_FEM=' +
                                     str(sigma_noise))
 # ########################################
 # # OU system
@@ -139,7 +139,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_FEM_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise=' +
                                     str(sigma_noise))
 sigma_noise = 0.01
 gedmd_helper.plot_errors_data_limit(M,
@@ -154,7 +154,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_FEM_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise=' +
                                     str(sigma_noise))
 sigma_noise = 0.1
 gedmd_helper.plot_errors_data_limit(M,
@@ -169,7 +169,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     operator='P',
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_PF_FEM_sigma_noise =' +
+                                    path='OU_PF_FEM_sigma_noise=' +
                                     str(sigma_noise))
 # gEDMD Koopman operator
 
@@ -185,7 +185,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_FEM_sigma_noise =' +
+                                    path='OU_FEM_sigma_noise=' +
                                     str(sigma_noise))
 sigma_noise = 0.01
 gedmd_helper.plot_errors_data_limit(M,
@@ -199,7 +199,7 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_FEM_sigma_noise =' +
+                                    path='OU_FEM_sigma_noise=' +
                                     str(sigma_noise))
 sigma_noise = 0.1
 gedmd_helper.plot_errors_data_limit(M,
@@ -213,5 +213,5 @@ gedmd_helper.plot_errors_data_limit(M,
                                     b,
                                     sigma_noise=sigma_noise,
                                     sigma=sigma,
-                                    path='OU_FEM_sigma_noise =' +
+                                    path='OU_FEM_sigma_noise=' +
                                     str(sigma_noise))
